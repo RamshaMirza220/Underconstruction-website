@@ -1,0 +1,30 @@
+The first build was made without my screenshots. I've attached two now: (1) the live Cheezious header and hero, and (2) my Figma layout. Adjust the existing homepage to match them section by section. Don't rebuild from scratch, don't change the framework, and don't install new packages. Frontend only, no backend.
+
+Header (image 1): Orange hamburger icon, then the logo, a yellow DELIVERY pill with a pin icon, a gray PICK-UP pill with a store icon, a wide light-gray search field ("Find in cheezious"), an outlined location field ("Enter the Delivery Address" with an arrow icon), a yellow CART button with an orange "0" badge, and a yellow LOGIN button. All are rounded and in one row. On mobile, collapse into logo, cart, and hamburger, with search and location stacked below.
+
+Hero: A full-width orange banner with a halftone pattern, "NOW OPEN G-15, ISLAMABAD" in white outlined type on the left, and a large pizza on a dark plate on the right. An orange strip sits below it. On mobile, stack the text above the pizza.
+
+Promo cards (Figma): Three equal square cards with rounded corners, each with an illustration and a short caption below: "Delivering cheezy khushiyan", "Fastest Growing Brand of the Year", and "Made with fresh, local ingredients and love". The third card has a small orange "ORDER NOW" tab on its right edge. On mobile, show them as a horizontal scroll or a single column.
+
+Explore Menu: The title is on the left, with orange "VIEW ALL" text and an orange rounded "ORDER NOW" button on the right. Below is a row of pill filters (All is yellow when active, the others are light gray). Under the filters is a 4-column grid of white cards with a thin border and rounded corners. Each card has an image, name, short description, price, and a small yellow "+" button at the bottom right. The grid is 4 columns on desktop, 2 on tablet, and 1–2 on mobile.
+
+Mobile app section: A large yellow rounded panel with a gradient. A phone mockup overlaps the top-left edge of the panel, and a small pizza icon in a circle sits at the top right. On the right side are "Download Our Mobile App", a one-line description, a row of overlapping circular avatars ending in an orange arrow circle, and the Google Play and App Store badges. On mobile, stack the phone above the text.
+
+Blogs: The title "Blogs" is on the left and orange "VIEW ALL" is on the right. Below are blog cards (image, title, date).
+
+Newsletter: A yellow dripping-wave background at the top. On the left is the orange heading "Special Offers & News", a line of text, an email input, and a yellow SUBSCRIBE button. On the right is a 3D megaphone with "let's talk CHEEZY" in yellow bold type. On mobile, stack with the megaphone below.
+
+Footer: Light gray bar with a logo icon, "Cheezious Copyright © 2024. All Rights Reserved.", and "Terms & Conditions | Privacy Policy" links below, all centered.
+
+Make it work, with client-side state only and no backend:
+
+Replace every placeholder with real Cheezious-style content: about 12 menu items across 4 real categories (Pizzas, Burgers, Pasta, Deals), with names, descriptions, and prices in Rs.
+The category pills actually filter the menu grid.
+The "+" button adds the item to the cart, and the CART badge updates its count.
+The DELIVERY/PICK-UP toggle switches the active state, and the address field only shows for Delivery.
+The search field filters the menu items by name.
+The hamburger opens a simple slide-in menu on mobile.
+The newsletter validates the email and shows a "Thanks for subscribing" message.
+Use local placeholder images where real ones aren't available.
+
+Don't add anything else. When done, list what changed per section.

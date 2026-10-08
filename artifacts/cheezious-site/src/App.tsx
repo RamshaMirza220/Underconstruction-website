@@ -6,27 +6,49 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import {
-  ArrowDown, ArrowRight, ArrowUpRight, Bike, Check, ChevronDown, Clock3,
-  Crosshair, MapPin, Menu, Pizza, ShoppingBag, Smartphone, Store, X,
+  ArrowRight, Award, Bike, Check, ChevronRight, MapPin, Megaphone, Menu,
+  Pizza, Plus, Search, ShoppingCart, Store, UserRound, X,
 } from 'lucide-react';
 
 const queryClient = new QueryClient();
 
 type Notice = { title: string; body: string; eyebrow?: string } | null;
 
-const menuItems = [
-  { name: 'Crown Crust', description: 'A golden crown, filled with creamy cheese and all the good stuff.', category: 'Pizza', tag: 'Cheezy classic', photo: '/food-pizza.jpg', note: 'Stuffed crust' },
-  { name: 'Crispy Chicken Burger', description: 'Crunchy, saucy, melty. The kind of burger that needs both hands.', category: 'Burgers', tag: 'Fan favourite', photo: '/food-burger.jpg', note: 'Big bite energy' },
-  { name: 'Flamin’ Wings', description: 'Juicy wings tossed in a bold, sticky, finger-licking glaze.', category: 'Sides', tag: 'A little heat', photo: '/food-wings.jpg', note: 'Hot & saucy' },
-  { name: 'Loaded Fries', description: 'Crispy fries, a generous cheese blanket, and a little kick.', category: 'Sides', tag: 'Share if you dare', photo: '/food-fries.jpg', note: 'Extra loaded' },
+type MenuCategory = 'Pizzas' | 'Burgers' | 'Pasta' | 'Deals';
+type MenuItem = {
+  id: string;
+  name: string;
+  description: string;
+  category: MenuCategory;
+  price: number;
+  photo: string;
+  tag: string;
+};
+
+const menuItems: MenuItem[] = [
+  { id: 'cheezious-special', name: 'Cheezious Special', description: 'Chicken, black olives, sausages and bell pepper under a generous layer of cheese.', category: 'Pizzas', price: 1480, photo: '/food-pizza.jpg', tag: 'Cheezy Treats' },
+  { id: 'behari-kabab', name: 'Behari Kabab', description: 'Smoky, tender kabab with a desi spice blend, onions and melty cheese.', category: 'Pizzas', price: 1480, photo: '/food-pizza.jpg', tag: 'Local favourite' },
+  { id: 'sausage-pizza', name: 'Sausage Pizza', description: 'Chicken sausages, pizza sauce and a classic cheese pull in every slice.', category: 'Pizzas', price: 660, photo: '/food-pizza.jpg', tag: 'Cheezy classic' },
+  { id: 'reggy-burger', name: 'Reggy Burger', description: 'A crispy chicken fillet, fresh lettuce and creamy house sauce.', category: 'Burgers', price: 380, photo: '/food-burger.jpg', tag: 'A quick favourite' },
+  { id: 'bazinga-burger', name: 'Bazinga Burger', description: 'Crunchy chicken, cool lettuce and a bold, creamy sauce in a soft bun.', category: 'Burgers', price: 540, photo: '/food-burger.jpg', tag: 'Crispy & saucy' },
+  { id: 'bazinga-supreme', name: 'Bazinga Supreme', description: 'A bigger, bolder chicken burger layered with cheese and signature sauce.', category: 'Burgers', price: 800, photo: '/food-burger.jpg', tag: 'Big bite' },
+  { id: 'crunchy-chicken-pasta', name: 'Crunchy Chicken Pasta', description: 'Creamy pasta with golden crunchy chicken and a savoury cheesy finish.', category: 'Pasta', price: 850, photo: '/food-pasta.svg', tag: 'Comfort food' },
+  { id: 'fettuccine-alfredo', name: 'Fettuccine Alfredo Pasta', description: 'Silky Alfredo sauce, tender chicken and fettuccine tossed until creamy.', category: 'Pasta', price: 990, photo: '/food-pasta.svg', tag: 'Rich & creamy' },
+  { id: 'small-pizza-deal', name: 'Small Pizza Deal', description: 'Pick a Local or Sooper flavour and pair it with a chilled regular drink.', category: 'Deals', price: 1290, photo: '/food-pizza.jpg', tag: 'Easy pick' },
+  { id: 'bazinga-pair', name: 'Bazinga Pair Deal', description: 'Two Bazinga burgers, regular fries and two regular drinks to share.', category: 'Deals', price: 1150, photo: '/food-burger.jpg', tag: 'For two' },
+  { id: 'bazinga-chicken-feast', name: 'Chicken Feast Deal', description: 'Two Bazinga burgers, two chicken pieces, large fries and two drinks.', category: 'Deals', price: 1550, photo: '/food-wings.jpg', tag: 'A table full' },
+  { id: 'triple-bazinga-deal', name: 'Triple Bazinga Deal', description: 'Three Bazinga burgers, large fries and a one-litre drink for the crew.', category: 'Deals', price: 1750, photo: '/food-burger.jpg', tag: 'Made to share' },
 ];
-const categories = ['All the good stuff', 'Pizza', 'Burgers', 'Sides'];
+const categories = ['All', 'Pizzas', 'Burgers', 'Pasta', 'Deals'] as const;
+type CategoryFilter = (typeof categories)[number];
+
+const formatPrice = (price: number) => `Rs. ${price.toLocaleString('en-PK')}`;
 
 function Brand() {
   return (
     <a className="brand" href="#top" aria-label="Cheezious home">
       <span className="brand-mark"><Pizza size={27} strokeWidth={2.4} /></span>
-      <span className="brand-name">cheezious<small>KHUSHIYAN SERVED HOT</small></span>
+      <span className="brand-name">Cheezious</span>
     </a>
   );
 }
@@ -47,112 +69,180 @@ function LoadingScreen() {
   );
 }
 
-function Header({ onNotice }: { onNotice: (notice: Notice) => void }) {
+function Header({
+  onNotice,
+  cartCount,
+  searchQuery,
+  onSearch,
+  onOpenCart,
+}: {
+  onNotice: (notice: Notice) => void;
+  cartCount: number;
+  searchQuery: string;
+  onSearch: (value: string) => void;
+  onOpenCart: () => void;
+}) {
   const [mode, setMode] = useState<'delivery' | 'pickup'>('delivery');
   const [address, setAddress] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const orderMode = (
+    <div className="order-mode" aria-label="Choose order type">
+      <button className={`mode-btn${mode === 'delivery' ? ' selected' : ''}`} onClick={() => setMode('delivery')}><MapPin size={14} /> Delivery</button>
+      <button className={`mode-btn${mode === 'pickup' ? ' selected' : ''}`} onClick={() => setMode('pickup')}><Store size={14} /> Pick-up</button>
+    </div>
+  );
+  const searchField = (
+    <label className="cheez-search">
+      <Search size={16} aria-hidden="true" />
+      <input aria-label="Search the Cheezious menu" type="search" value={searchQuery} onChange={(event) => onSearch(event.target.value)} placeholder="Find in cheezious" />
+    </label>
+  );
+  const addressField = mode === 'delivery' ? (
+    <label className="cheez-address">
+      <MapPin size={16} aria-hidden="true" />
+      <input aria-label="Delivery address" value={address} onChange={(event) => setAddress(event.target.value)} placeholder="Enter the Delivery Address" />
+      <ChevronRight size={16} aria-hidden="true" />
+    </label>
+  ) : null;
   return (
-    <header className="site-header" id="top">
-      <div className="page-shell header-inner">
-        <Brand />
-        <div className="order-controls">
-          <div className="order-mode" aria-label="Choose order type">
-            <button className={`mode-btn${mode === 'delivery' ? ' selected' : ''}`} onClick={() => setMode('delivery')}><Bike size={14} /> Delivery</button>
-            <button className={`mode-btn${mode === 'pickup' ? ' selected' : ''}`} onClick={() => setMode('pickup')}><Store size={14} /> Pick-up</button>
-          </div>
-          <label className="address-box">
-            {mode === 'delivery' ? <MapPin size={17} /> : <Crosshair size={17} />}
-            <input aria-label="Delivery address or city" value={address} onChange={(event) => setAddress(event.target.value)} placeholder={mode === 'delivery' ? 'Enter your delivery area' : 'Choose a nearby branch'} />
-            <ChevronDown size={15} />
-          </label>
+    <header className="cheez-header" id="top">
+      <div className="cheez-header-row">
+        <div className="brand-nav-wrap">
+          <button className="menu-trigger" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+          <Brand />
+        </div>
+        <div className="desktop-controls">
+          {orderMode}
+          {searchField}
+          {addressField}
         </div>
         <div className="header-actions">
-          <button className="cart-btn" onClick={() => onNotice({ eyebrow: 'Your bag', title: 'Nothing in your bag yet', body: 'Your next cheesy favourite is just around the corner. Explore the menu and find your new go-to.' })}><ShoppingBag size={16} /> Your cart</button>
-          <button className="login-btn" onClick={() => onNotice({ eyebrow: 'Welcome to Cheezious', title: 'Good food brings us together', body: 'This is a preview of the Cheezious homepage. Sign-in and ordering are not part of this demo.' })}>Log in</button>
-          <button className="mobile-menu" aria-label={menuOpen ? 'Close menu' : 'Open menu'} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={19} /> : <Menu size={19} />}</button>
+          <button className="cart-btn" onClick={onOpenCart} aria-label={`Open cart, ${cartCount} items`}>
+            <ShoppingCart size={16} /><span>CART</span><span className="cart-count">{cartCount}</span>
+          </button>
+          <button className="login-btn" onClick={() => onNotice({ eyebrow: 'Welcome to Cheezious', title: 'Good food brings us together', body: 'This page is a front-end preview. Account sign-in is not connected.' })}><UserRound size={15} /> LOGIN</button>
         </div>
       </div>
-      {menuOpen && <nav className="mobile-nav page-shell" aria-label="Mobile navigation">
-        <div className="mobile-order-controls">
-          <div className="order-mode" aria-label="Choose order type">
-            <button className={`mode-btn${mode === 'delivery' ? ' selected' : ''}`} onClick={() => setMode('delivery')}><Bike size={14} /> Delivery</button>
-            <button className={`mode-btn${mode === 'pickup' ? ' selected' : ''}`} onClick={() => setMode('pickup')}><Store size={14} /> Pick-up</button>
-          </div>
-          <label className="address-box">
-            {mode === 'delivery' ? <MapPin size={17} /> : <Crosshair size={17} />}
-            <input aria-label="Delivery address or city" value={address} onChange={(event) => setAddress(event.target.value)} placeholder={mode === 'delivery' ? 'Enter your delivery area' : 'Choose a nearby branch'} />
-            <ChevronDown size={15} />
-          </label>
-        </div>
-        <a href="#menu" onClick={() => setMenuOpen(false)}>Explore menu <ArrowRight size={14} /></a><a href="#app" onClick={() => setMenuOpen(false)}>Our app <ArrowRight size={14} /></a><a href="#stories" onClick={() => setMenuOpen(false)}>Stories <ArrowRight size={14} /></a><a href="#offers" onClick={() => setMenuOpen(false)}>Offers & news <ArrowRight size={14} /></a>
-      </nav>}
+      <div className="mobile-controls">
+        {orderMode}
+        {searchField}
+        {addressField}
+      </div>
+      {menuOpen && <div className="drawer-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
+        <nav className="mobile-drawer" aria-label="Cheezious navigation">
+          <div className="drawer-heading"><span>Explore Cheezious</span><button aria-label="Close menu" onClick={() => setMenuOpen(false)}><X size={19} /></button></div>
+          <a href="#menu" onClick={() => setMenuOpen(false)}>Explore Menu <ChevronRight size={16} /></a>
+          <a href="#app" onClick={() => setMenuOpen(false)}>Download Our App <ChevronRight size={16} /></a>
+          <a href="#stories" onClick={() => setMenuOpen(false)}>Blogs <ChevronRight size={16} /></a>
+          <a href="#offers" onClick={() => setMenuOpen(false)}>Special Offers & News <ChevronRight size={16} /></a>
+        </nav>
+      </div>}
     </header>
   );
 }
 
 function Hero() {
   return (
-    <section className="hero page-shell" aria-label="Cheezious promotion">
-      <div className="hero-frame">
-        <div className="hero-copy">
-          <div className="hero-kicker"><span>Hot, fresh & full of khushi</span></div>
-          <h1>Good times.<br /><em>Extra cheese.</em></h1>
-          <p>Pizza nights, crispy bites, and all the little moments that taste better together. Made fresh, delivered with love.</p>
-          <div className="hero-bottom">
-            <a className="button" href="#menu">Explore the menu <ArrowRight size={16} /></a>
-            <span className="hero-note"><Clock3 size={15} /> Freshly made, always</span>
-          </div>
-        </div>
-        <div className="hero-stamp"><div><strong>100%<br />KHUSHI</strong><span>IN EVERY BITE</span></div></div>
-        <div className="hero-dots" aria-label="Promotion 1 of 3"><span /><span /><span /></div>
+    <section className="hero-banner" aria-label="Now open in G-15, Islamabad">
+      <div className="hero-pattern" aria-hidden="true" />
+      <div className="hero-food" aria-hidden="true"><img src="/food-pizza.jpg" alt="" /></div>
+      <div className="hero-copy">
+        <h1><span>NOW OPEN</span><strong>G-15, ISLAMABAD</strong></h1>
       </div>
+      <div className="hero-orange-strip" />
     </section>
   );
 }
 
-function PromoCards() {
+function PromoCards({ onOrder }: { onOrder: () => void }) {
   const promos = [
-    { overline: 'At your door, with a smile', title: <>Delivering<br />cheezy khushiyan</> },
-    { overline: 'Growing together', title: <>Fastest Growing<br />Brand of the Year</> },
-    { overline: 'Good food starts here', title: <>Fresh, local<br />ingredients & love</> },
+    { className: 'delivery', overline: 'DELIVERING', graphic: 'CHEEZY\\nKHUSHIYAN', caption: 'Delivering cheezy khushiyan', icon: <Bike size={54} strokeWidth={1.6} /> },
+    { className: 'award', overline: 'THE BRAND OF', graphic: 'CHEEZY\\nHEARTS', caption: 'Fastest Growing Brand of the Year', icon: <Award size={58} strokeWidth={1.6} /> },
+    { className: 'local', overline: 'FOR THE LOVE OF', graphic: 'LOCAL\\nFLAVORS', caption: 'Made with fresh, local ingredients and love', icon: <Pizza size={54} strokeWidth={1.6} /> },
   ];
-  return <div className="page-shell promo-grid">{promos.map((item) => (
-    <article className="promo-card" key={item.overline}><div className="promo-text"><small>{item.overline}</small><h3>{item.title}</h3></div></article>
-  ))}</div>;
+  return <section className="promo-strip site-width" aria-label="Why Cheezious">
+    {promos.map((item, index) => <article className="promo-tile" key={item.caption}>
+      <div className={`promo-art promo-art-${item.className}`}>
+        <span className="promo-art-overline">{item.overline}</span>
+        <strong>{item.graphic.split('\\n').map((line) => <span key={line}>{line}</span>)}</strong>
+        <span className="promo-art-icon">{item.icon}</span>
+        {index === 2 && <button className="promo-order-tab" onClick={onOrder}>ORDER NOW</button>}
+      </div>
+      <p>{item.caption}</p>
+    </article>)}
+  </section>;
 }
 
-function MenuSection({ onNotice }: { onNotice: (notice: Notice) => void }) {
-  const [category, setCategory] = useState(categories[0]);
-  const filtered = category === categories[0] ? menuItems : menuItems.filter((item) => item.category === category);
+function MenuSection({
+  searchQuery,
+  onAddToCart,
+}: {
+  searchQuery: string;
+  onAddToCart: (item: MenuItem) => void;
+}) {
+  const [category, setCategory] = useState<CategoryFilter>('All');
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const filtered = menuItems.filter((item) => {
+    const categoryMatches = category === 'All' || item.category === category;
+    const searchMatches = !normalizedSearch || `${item.name} ${item.description} ${item.category}`.toLowerCase().includes(normalizedSearch);
+    return categoryMatches && searchMatches;
+  });
   return (
-    <section className="page-shell menu-section section-pad" id="menu">
-      <div className="section-topline">
-        <div><div className="eyebrow">A menu full of moments</div><h2 className="section-heading">Explore the <span>menu.</span></h2><p className="section-intro">Big flavours, proper portions, and all the cheesy goodness you came for.</p></div>
-        <div className="menu-tabs" role="tablist" aria-label="Menu categories">{categories.map((item) => <button key={item} role="tab" aria-selected={category === item} className={category === item ? 'active' : ''} onClick={() => setCategory(item)}>{item}</button>)}</div>
+    <section className="menu-area site-width" id="menu">
+      <div className="menu-title-row">
+        <h2>Explore Menu</h2>
+        <div className="menu-heading-actions">
+          <button className="text-action" onClick={() => setCategory('All')}>VIEW ALL</button>
+          <a className="order-action" href="#menu-grid">ORDER NOW</a>
+        </div>
       </div>
-      <div className="menu-grid">{filtered.map((item) => <article className="menu-card" key={item.name}>
-        <div className="menu-photo"><img src={item.photo} alt={item.name} /><span className="menu-photo-label">{item.tag}</span></div>
-        <div className="menu-info"><h3>{item.name}</h3><p>{item.description}</p><div className="menu-footer"><span>{item.note}</span><span>Made for sharing</span></div></div>
-      </article>)}</div>
-      <div className="menu-action"><button className="button button-dark" onClick={() => onNotice({ eyebrow: 'Our menu', title: 'There’s more to love', body: 'Explore our full range of pizzas, burgers, sides, and sweet treats at a Cheezious near you.' })}>See what else is cooking <ArrowRight size={15} /></button></div>
+      <div className="category-pills" role="tablist" aria-label="Menu categories">
+        {categories.map((item) => <button key={item} role="tab" aria-selected={category === item} className={category === item ? 'active' : ''} onClick={() => setCategory(item)}>{item}</button>)}
+      </div>
+      {filtered.length ? <div className="food-grid" id="menu-grid">
+        {filtered.map((item) => <article className="food-card" key={item.id}>
+          <div className="food-card-image"><img src={item.photo} alt={item.name} /><span>{item.category}</span></div>
+          <div className="food-card-info">
+            <h3>{item.name}</h3>
+            <p>{item.description}</p>
+            <div className="food-card-bottom">
+              <strong>{formatPrice(item.price)}</strong>
+              <button aria-label={`Add ${item.name} to cart`} title={`Add ${item.name} to cart`} onClick={() => onAddToCart(item)}><Plus size={17} /></button>
+            </div>
+          </div>
+        </article>)}
+      </div> : <p className="menu-empty">No menu items match “{searchQuery}”. Try another search.</p>}
     </section>
   );
 }
 
-function AppBand({ onNotice }: { onNotice: (notice: Notice) => void }) {
+function AppBand() {
   return (
-    <section className="app-band" id="app">
-      <div className="page-shell app-inner">
-        <div className="app-copy">
-          <div className="eyebrow">Khushi, one tap away</div>
-          <h2>Cheezious in your pocket.</h2>
-          <p>Your favourites, your way. Get the Cheezious app for the latest offers and an even easier way to bring everyone to the table.</p>
-          <div className="store-buttons">
-            <button className="store-button" onClick={() => onNotice({ eyebrow: 'Coming right up', title: 'Find us in your app store', body: 'The Cheezious app links will be available here when the live site is connected.' })}><Smartphone size={19} /><span>Download on the<strong>App Store</strong></span></button>
-            <button className="store-button" onClick={() => onNotice({ eyebrow: 'Coming right up', title: 'Find us in your app store', body: 'The Cheezious app links will be available here when the live site is connected.' })}><ArrowDown size={19} /><span>GET IT ON<strong>Google Play</strong></span></button>
+    <section className="app-promo-section site-width" id="app">
+      <div className="app-promo-panel">
+        <div className="phone-scene" aria-hidden="true">
+          <div className="phone">
+            <div className="phone-notch" />
+            <div className="phone-head">chee<span>zious</span><small>GOOD FOOD, ONE TAP AWAY</small></div>
+            <div className="phone-pizza" />
+            <div className="phone-mini-grid"><span /><span /><span /></div>
+            <div className="phone-line" /><div className="phone-line short" />
           </div>
         </div>
-        <div className="phone-scene" aria-hidden="true"><span className="app-spark">Good stuff!</span><div className="phone"><div className="phone-notch" /><div className="phone-head">cheezious<small>MADE FOR YOUR KIND OF HUNGER</small></div><div className="phone-pizza" /><div className="phone-line" /><div className="phone-line short" /></div></div>
+        <div className="app-copy">
+          <div className="app-copy-heading"><span className="eyebrow">Cheezious, wherever you are</span><h2>Download Our<br />Mobile App</h2></div>
+          <p>Elevate your experience by downloading our mobile app for seamless ordering experience.</p>
+          <div className="app-social-row" aria-label="Join the Cheezious community">
+            <span className="app-avatar avatar-one">S</span><span className="app-avatar avatar-two">A</span><span className="app-avatar avatar-three">M</span><span className="app-avatar avatar-four">H</span><a href="#menu" aria-label="Explore the menu"><ArrowRight size={17} /></a>
+          </div>
+          <div className="store-buttons" aria-label="App download badges">
+            <a className="store-button" href="#app"><span className="store-symbol">▶</span><span>GET IT ON<strong>Google Play</strong></span></a>
+            <a className="store-button" href="#app"><span className="store-symbol">●</span><span>Download on the<strong>App Store</strong></span></a>
+          </div>
+        </div>
+        <div className="app-pizza-sticker" aria-hidden="true"><Pizza size={42} /></div>
       </div>
     </section>
   );
@@ -160,14 +250,16 @@ function AppBand({ onNotice }: { onNotice: (notice: Notice) => void }) {
 
 function Stories() {
   const stories = [
-    { tag: 'Community', title: 'A little extra cheese. A lot more joy.', copy: 'The best meals are the ones that bring everybody to the table.', photo: '/food-pizza.jpg', date: 'OUR STORY' },
-    { tag: 'Behind the bite', title: 'Freshness you can taste in every bite.', copy: 'Local ingredients, generous toppings, and care in every kitchen.', photo: '/food-fries.jpg', date: 'MADE WITH LOVE' },
-    { tag: 'The Cheezious way', title: 'Good food. Great company. Always.', copy: 'Here’s to the shared slices and stories that stay with you.', photo: '/food-burger.jpg', date: 'GOOD TIMES' },
+    { title: 'Burgers Beyond Borders: Iconic Fast-Food Classics', photo: '/food-burger.jpg', date: '11 JUN 2026' },
+    { title: 'The joy of bringing local flavours to the table', photo: '/food-pizza.jpg', date: '24 JUL 2026' },
+    { title: 'A little extra cheese makes every moment better', photo: '/food-fries.jpg', date: '09 AUG 2026' },
   ];
   return (
-    <section className="page-shell blog-section section-pad" id="stories">
-      <div className="blog-heading-row"><div><div className="eyebrow">A little something to read</div><h2 className="section-heading">From our <span>kitchen.</span></h2></div><a className="button button-dark" href="#offers">All stories <ArrowRight size={15} /></a></div>
-      <div className="blog-grid">{stories.map((story) => <article className="blog-card" key={story.title}><div className="blog-img"><img src={story.photo} alt="" /><span className="blog-date">{story.date}</span></div><div className="blog-body"><small>{story.tag}</small><h3>{story.title}</h3><p>{story.copy}</p><a href="#offers" className="text-link">Read the story <ArrowUpRight size={13} /></a></div></article>)}</div>
+    <section className="blogs-section site-width" id="stories">
+      <div className="blogs-heading"><h2>Blogs</h2><a className="text-action" href="#stories">VIEW ALL</a></div>
+      <div className="blogs-grid">{stories.map((story) => <article className="blog-tile" key={story.title}>
+        <img src={story.photo} alt="" /><time>{story.date}</time><h3>{story.title}</h3>
+      </article>)}</div>
     </section>
   );
 }
@@ -178,34 +270,73 @@ function Newsletter() {
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!email.trim()) return;
-    setStatus('Thanks for joining the Cheezious family.');
+    setStatus('Thanks for subscribing');
     setEmail('');
   };
   return (
-    <section className="newsletter" id="offers">
-      <div className="page-shell newsletter-inner">
-        <div><div className="eyebrow">Stay in the loop</div><h2>Special offers & news.</h2><p>Good news, fresh from our kitchen. No spam, just the good stuff.</p></div>
-        <form className="newsletter-form" onSubmit={submit}><input type="email" required aria-label="Email address" placeholder="Your email address" value={email} onChange={(event) => { setEmail(event.target.value); setStatus(''); }} /><button type="submit">{status ? <><Check size={15} /> Joined</> : 'Sign me up'}</button></form>
-        {status && <div className="newsletter-status" role="status">{status}</div>}
+    <section className="newsletter-section" id="offers">
+      <svg className="newsletter-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 0h1440v45c-57 0-78 45-136 45s-62-59-118-59-66 85-132 85-81-68-148-68-72 58-132 58-65-83-128-83-76 91-140 91-71-67-137-67-74 45-136 45-92-47-151-47-75 43-129 43S51 54 0 54V0z" />
+      </svg>
+      <div className="newsletter-content site-width">
+        <div className="newsletter-copy">
+          <h2>Special Offers &amp; News</h2>
+          <p>Subscribe now for news, promotions and more delivered right to your inbox.</p>
+          <form className="newsletter-form" onSubmit={submit}>
+            <input type="email" required aria-label="Email address" placeholder="Your Email Address" value={email} onChange={(event) => { setEmail(event.target.value); setStatus(''); }} />
+            <button type="submit">{status ? <><Check size={14} /> SUBSCRIBED</> : 'SUBSCRIBE'}</button>
+          </form>
+          {status && <div className="newsletter-status" role="status">{status}</div>}
+        </div>
+        <div className="newsletter-graphic" aria-hidden="true"><Megaphone size={102} strokeWidth={1.4} /><span>let’s talk<br /><strong>CHEEZY</strong></span></div>
       </div>
     </section>
   );
 }
 
 function Footer({ onNotice }: { onNotice: (notice: Notice) => void }) {
-  const show = (label: string) => onNotice({ eyebrow: 'Cheezious', title: label, body: 'Thanks for checking in. This page is a front-end preview of the Cheezious homepage.' });
+  const show = (label: string) => onNotice({ eyebrow: 'Cheezious', title: label, body: 'This page is a front-end preview. This link is not connected to an account or policy service.' });
   return (
-    <footer className="site-footer">
-      <div className="page-shell">
-        <div className="footer-main">
-          <div className="footer-brand"><Brand /><p>Cheezy goodness, crispy favourites, and a whole lot of khushi. Proudly bringing people together, one bite at a time.</p><div className="socials"><a href="#top" aria-label="Instagram">in</a><a href="#top" aria-label="Facebook">f</a><a href="#top" aria-label="TikTok">tk</a></div></div>
-          <div className="footer-col"><h4>Hungry?</h4><a href="#menu">Explore menu</a><a href="#offers">Special offers</a><a href="#app">Get the app</a></div>
-          <div className="footer-col"><h4>Our world</h4><a href="#stories">Our story</a><button onClick={() => show('Find your nearest Cheezious')}>Find a location</button><button onClick={() => show('Get in touch')}>Contact us</button></div>
-          <div className="footer-col"><h4>Say hello</h4><button onClick={() => show('Questions? We’re listening.')}>We’re here to help</button><button onClick={() => show('Careers at Cheezious')}>Join our team</button><button onClick={() => show('Franchise with us')}>Franchise</button></div>
-        </div>
-        <div className="footer-legal"><span>© 2025 Cheezious. Made with love, served with cheese.</span><div className="legal-links"><button onClick={() => show('Privacy policy')}>Privacy policy</button><button onClick={() => show('Terms & conditions')}>Terms & conditions</button></div></div>
-      </div>
+    <footer className="simple-footer">
+      <a className="footer-logo-mark" href="#top" aria-label="Cheezious home"><Pizza size={18} /></a>
+      <p>© Cheezious. Copyright © 2024 All Rights Reserved.</p>
+      <div><button onClick={() => show('Terms & Conditions')}>TERMS &amp; CONDITIONS</button><span>|</span><button onClick={() => show('Privacy Policy')}>PRIVACY POLICY</button></div>
     </footer>
+  );
+}
+
+function CartDrawer({
+  cart,
+  onClose,
+}: {
+  cart: Record<string, number>;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  const items = menuItems.filter((item) => (cart[item.id] ?? 0) > 0);
+  const total = items.reduce((sum, item) => sum + item.price * (cart[item.id] ?? 0), 0);
+  return (
+    <div className="cart-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <aside className="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+        <div className="cart-panel-heading">
+          <div><span>Your Cheezious order</span><h2 id="cart-title">Your Cart <small>({items.reduce((count, item) => count + cart[item.id], 0)})</small></h2></div>
+          <button aria-label="Close cart" onClick={onClose}><X size={20} /></button>
+        </div>
+        {items.length ? <>
+          <div className="cart-line-items">{items.map((item) => <div className="cart-line" key={item.id}>
+            <img src={item.photo} alt="" />
+            <div><strong>{item.name}</strong><span>{cart[item.id] ?? 0} × {formatPrice(item.price)}</span></div>
+            <b>{formatPrice(item.price * (cart[item.id] ?? 0))}</b>
+          </div>)}</div>
+          <div className="cart-subtotal"><span>Subtotal</span><strong>{formatPrice(total)}</strong></div>
+          <p className="cart-preview-note">Ordering is a front-end preview; checkout is not connected.</p>
+        </> : <div className="cart-empty"><ShoppingCart size={30} /><strong>Your cart is empty</strong><span>Add a favourite from the menu to get started.</span><button onClick={onClose}>EXPLORE MENU</button></div>}
+      </aside>
+    </div>
   );
 }
 
@@ -222,20 +353,26 @@ function NoticeDialog({ notice, onClose }: { notice: Notice; onClose: () => void
 
 function Home() {
   const [notice, setNotice] = useState<Notice>(null);
+  const [cart, setCart] = useState<Record<string, number>>({});
+  const [cartOpen, setCartOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const cartCount = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
   const closeNotice = () => setNotice(null);
+  const addToCart = (item: MenuItem) => setCart((current) => ({ ...current, [item.id]: (current[item.id] ?? 0) + 1 }));
   return (
     <>
       <LoadingScreen />
-      <Header onNotice={setNotice} />
+      <Header onNotice={setNotice} cartCount={cartCount} searchQuery={searchQuery} onSearch={setSearchQuery} onOpenCart={() => setCartOpen(true)} />
       <main>
         <Hero />
-        <PromoCards />
-        <MenuSection onNotice={setNotice} />
-        <AppBand onNotice={setNotice} />
+        <PromoCards onOrder={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })} />
+        <MenuSection searchQuery={searchQuery} onAddToCart={addToCart} />
+        <AppBand />
         <Stories />
         <Newsletter />
       </main>
       <Footer onNotice={setNotice} />
+      {cartOpen && <CartDrawer cart={cart} onClose={() => setCartOpen(false)} />}
       <NoticeDialog notice={notice} onClose={closeNotice} />
     </>
   );
