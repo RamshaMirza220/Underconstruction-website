@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Cheezious Inspired Website"
+description = "A responsive restaurant homepage inspired by Cheezious, featuring a branded loading screen, food promotions, menu exploration, and mobile app and news sections."
+version = "1.0.0"
+id = "artifacts/cheezious-site"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19391
+
+[services.development]
+run = "pnpm --filter @workspace/cheezious-site run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/cheezious-site", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/cheezious-site/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19391"
+BASE_PATH = "/"

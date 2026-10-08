@@ -1,0 +1,58 @@
+Build the Cheezious-inspired restaurant website shown in the attached Figma screenshot.
+
+Reference website:
+https://cheezious.com/
+
+IMPORTANT:
+- Use the attached Figma screenshot as the primary visual reference.
+- Also inspect the reference website to understand the actual layout and content structure.
+- Do NOT create a generic pizza/restaurant template.
+- Match the screenshot's layout, proportions, spacing, typography, yellow/white visual style, cards, buttons, and section hierarchy as closely as possible.
+- Work within the project's existing framework and structure. Do not replace the framework or unnecessarily install packages.
+- Keep the implementation lightweight and optimized for Replit's free plan.
+- Do not build a backend, authentication, payment system, or real ordering functionality yet.
+- Focus only on the frontend UI.
+
+FIRST IMPLEMENT:
+
+1. LOADING SCREEN
+- Create the initial loading screen shown in the screenshot.
+- Use a centered pizza loading visual on a simple light/gray background.
+- Add a short smooth loading transition into the homepage.
+- Make the loading screen responsive.
+
+2. DESKTOP HOMEPAGE
+Recreate the homepage structure shown in the screenshot:
+- Top navigation/header
+- Cheezious branding/logo area
+- Order/delivery controls
+- Main hero/promotional area
+- Three promotional food/banner cards
+- "Explore Menu" section with category/product cards
+- Yellow mobile-app/download section
+- Blog/news section
+- Yellow promotional/newsletter section
+- Footer
+
+3. RESPONSIVE DESIGN
+- Make the layout responsive for desktop, tablet, and mobile.
+- On mobile, stack/rearrange sections naturally instead of simply shrinking the desktop layout.
+- Keep buttons and navigation usable on touch screens.
+
+DESIGN:
+- Use the Cheezious yellow/white visual language from the reference.
+- Use rounded cards and buttons where shown.
+- Match the screenshot's spacing and proportions closely.
+- Use placeholder/local assets where exact images are unavailable rather than spending time creating unrelated graphics.
+- Keep reusable components for repeated cards/buttons.
+- Keep the code clean and simple.
+
+DO NOT:
+- Add features that are not visible in the reference.
+- Change the project's framework.
+- Install unnecessary libraries.
+- Build backend functionality.
+- Spend time on animations other than the loading transition.
+- Modify unrelated existing files.
+
+After implementation, run the app and make sure there are no errors and the homepage loads correctly.
