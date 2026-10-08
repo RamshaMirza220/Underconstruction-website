@@ -1,0 +1,108 @@
+CHEEZIOUS MENU DATA
+===================
+Format per line:  Name | Price (Rs.) | StartingPrice (SP or -) | Description
+Every item has ONE variation called "Regular" at the listed price.
+Use the matching product image from https://cheezious.com/menu for each item.
+SP = show the salmon-orange "Starting Price" pill next to the price.
+Category order below is the tab order. Keep it.
+
+Home page "Explore Menu" carousel cards (each links to the /menu category):
+THIN CRUST PIZZA, MALAI TIKKA, BEEF PEPPERONI PIZZA, STARTERS
+
+-------------------------------------------------
+[1] Thin Crust Pizza
+Thin Crust Beef Pepperoni | 1480 | SP | A Crispy Thin Crust Topped With Beef Pepperoni, Mozzarella Cheese, And Rich Marinara Sauce
+Thin Crust Veggie Lover | 1290 | SP | Cheese Blend, Mushrooms, Sweet Corn, Black Olives, Onions, Capsicum And Tomatoes
+Thin Crust Cheese Lover | 1290 | SP | Extra Special Mozzarella Blend And Signature Sauce On A Crispy Thin Crust.
+Thin Crust Fajita | 1290 | SP | Tender Fajita Chicken With Mozzarella Blend, Onions And Bell Pepper On A Crispy Thin Crust.
+Thin Crust Tikka | 1290 | SP | Juicy Tikka Chicken, Mozzarella Cheese Blend, And Onions Served On A Perfectly Crispy Thin Crust.
+
+[2] Malai Tikka
+Malai Tikka | 1530 | SP | A Flavorful Pizza Loaded With Fresh BBQ Malai Tikka Chunks And Topped With A Swirl Of Sauce.
+
+[3] Beef Pepperoni Pizza
+Beef Pepperoni Pizza | 1480 | SP | Freshly Baked Pan Crust, Soft Inside And Golden-Crisp Outside, Topped With Beef Pepperoni.
+
+[4] Starters
+Cheezy Sticks | 600 | - | Freshly Baked Bread Filled With The Yummiest Cheese Blend To Satisfy Your Cravings.
+Oven Baked Wings | 580 | SP | Fresh Oven Baked Wings Served With Dip Sauce.
+Flaming Wings | 620 | SP | Fresh Oven Baked Wings Tossed In Hot Peri Peri Sauce And Served With Dip Sauce.
+Calzone Chunks | 1100 | - | 4 Pcs Stuffed Calzone Chunks Served With Sauce & Fries.
+Arabic Rolls | 660 | - | 4 Pcs Arabic Rolls Stuffed With The Yummiest Mix Served With Sauce.
+Behari Rolls | 660 | - | 4 Pcs Behari Rolls Stuffed With The Yummiest Mix Served With Sauce.
+
+[5] Somewhat Local
+Chicken Tikka | 660 | SP | Topping Of Chicken Tikka Chunks With Savoury Onion
+Chicken Fajita | 660 | SP | An Authentic Taste Of Fajita Marinated Chicken, Onion And Bell Peppers.
+Chicken Lover | 660 | SP | Extreme Quantity Of Chicken And Onion With Rich Mozzarella Cheese.
+Chicken Tandoori | 660 | SP | Our Traditionally Developed Tandoori Chicken With Onion, Olives, Jalapeno And Tomatoes.
+Hot n Spicy | 660 | SP | Hot And Spicy Chicken Onion With Jalapeno.
+Vegetable Pizza | 660 | SP | Vegetables With Pizza Sauce And Cheese.
+
+[6] Somewhat Sooper
+Euro | 660 | SP | A Delightful Combination Of Specially Marinated Smoked Chicken With Bell Pepper And Olives.
+Chicken Supreme | 660 | SP | A Combination Of 3 Flavors Of Chicken, Black Olives, Mushrooms, Bell Pepper And Onion.
+Black Pepper Tikka | 660 | SP | A Blend Of Marinated Black Pepper Chicken, Onion And Bell Pepper.
+Sausage Pizza | 660 | SP | Chicken Sausages, Pizza Sauce, And Cheese.
+Cheese Lover Pizza | 660 | SP | Yummiest Blend Of Cheese And Pizza Sauce
+Chicken Pepperoni | 660 | SP | Chicken Pepperoni, Pizza Sauce And Cheese.
+Chicken Mushroom | 660 | SP | Tender Chunks Of Marinated Grilled Chicken Tikka, Lots Of Mushrooms, Onion And Tomatoes.
+
+[7] Cheezy Treats
+Cheezious Special | 1480 | SP | Delicious Special Chicken With Black Olives, Sausages And Bell Pepper.
+Behari Kabab | 1480 | SP | Enjoy Special Chicken Behari Kabab, Grilled Chicken With Onion Jalapenos And Ginger.
+Chicken Extreme | 1480 | SP | Combination Of 3 Flavors Of Chicken With Onion, Bell Pepper, Green Olives, Mushrooms.
+
+[8] Pizza Deals
+Small Pizza Deal | 720 | SP | Enjoy Any Flavor From Our Local Or Sooper Flavor Category Along With Regular Soft Drink.
+Regular Pizza Deal | 1390 | SP | 1 Regular Pizza And 2 Regular Drinks.
+Large Pizza Deal | 1900 | SP | Any Flavor From Local Or Over The Sea Flavor Category & 1 Liter Drink.
+
+[9] Sandwiches & Platters
+Mexican Sandwich | 880 | - | Mozzarella Dipped Black Pepper Chicken Topped With Garlic Sauce And Tomatoes Served With Fries.
+Pizza Stacker | 880 | - | A Unique Blend Of Delicious Sauce, Crispy Chicken And Baked Bread
+Euro Sandwich | 880 | - | Mozzarella Dipped Tikka Chicken Topped With Garlic Sauce And Pineapple
+Classic Roll Platter | 1150 | - | 4 Pcs Behari Rolls, 4 Pcs Arabic Rolls Served With Fries & Sauce.
+Special Roasted Platter | 1150 | - | 4 Pcs Behari Rolls, 6 Pcs Wings Served With Fries & Sauce.
+
+[10] Special Pizza
+Crown Crust | 1480 | SP | Scrumptious Pizza With A Yummy Blend Of Grilled Chicken, Olives, Onion, Capsicum And Tomatoes.
+Stuff Crust Pizza | 1530 | SP | Special Chicken, Green Olives, Mushrooms, With The Crust Filled With Cheese Or Kabab.
+Thin Crust Beef Pepperoni | 1480 | SP | A Crispy Thin Crust Topped With Beef Pepperoni, Mozzarella Cheese, And Rich Marinara Sauce
+Malai Tikka | 1530 | SP | A Flavorful Pizza Loaded With Fresh BBQ Malai Tikka Chunks And Topped With A Swirl Of Sauce.
+
+[11] Somewhat Amazing   (NOTE: names are truncated on the live site; confirm there)
+Somewhat Amazing 1 | 1190 | SP | 2 Bazinga, Regular Fries, 2 Regular Drinks
+Somewhat Amazing 2 | 1670 | SP | 2 Bazinga Burger, 2 Pcs Chicken, Large Fries, 2 Regular Drinks
+Somewhat Amazing 3 | 1800 | SP | 3 Bazinga Burger, Large Fries, 1 Liter Drink
+Somewhat Amazing 4 | 2050 | SP | 3 Bazinga Burger, 3 Pcs Chicken, 1 Liter Drink
+
+[12] Pastas
+Fettuccine Alfredo | 1000 | - | Pasta Made In The Yummiest White Sauce With Chicken Chunks Topped With Cheese.
+Crunchy Chicken Pasta | 910 | - | Yummiest Macaroni Pasta In White Sauce Topped With Crispy Chicken And Cheese.
+
+[13] Burgerz
+Reggy Burger | 380 | SP | Perfectly Fried Chicken Patty With Fresh Lettuce And Sauce In A Cornmeal/ Corn Dusted Bun.
+Bazinga Burger | 540 | SP | Crispy Fried To Perfection Boneless Thigh With Mayo And Lettuce Held In A Corn Dusted Bun.
+Bazooka | 600 | SP | Tender, Spicy Chicken Strips Paired With Mayo, Pickles, Jalapenos, And Signature Sauce.
+
+[14] Side Orders
+Fries | 210 | SP | (no description)
+Chicken Nuggets | 430 | SP | 5 Pcs
+Fried Chicken | 710 | SP | Crispy Chicken
+Chicken Strips | 390 | SP | 3 Chicken Strips With A Sauce To Choose
+
+[15] Addons   (INCOMPLETE: copy the full list from the live site)
+Juice | 60 | - | (no description)
+Mayo Dip | 80 | - | (no description)
+Water Small | 60 | - | (no description)
+Diet Drink | 95 | SP | Diet Drink
+Chilli Lime | 80 | - | Chilli Lime
+Chipotle | 80 | - | Chipotle
+(3 more dips appear after Chipotle on the live site: copy them too)
+
+[16] Soft Drinks   (INCOMPLETE: copy the full list from the live site)
+Diet Drink | 95 | SP | Diet Drink
+Chilli Lime | 80 | - | Chilli Lime
+Chipotle | 80 | - | Chipotle
+(remaining drinks and dips: copy from the live site)

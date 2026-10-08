@@ -1,0 +1,20 @@
+Update the existing Cheezious site so the home page and a new /menu page match https://cheezious.com. Open the live site and copy its layout, colors, and images. Keep the current framework, install nothing new, frontend-only mock data, no backend or payments. Do it in one pass: write the code, run the app once, fix errors, and stop. Don't take extra verification screenshots or touch unrelated files. Reply with a short change list.
+
+Assets: Download the real images from cheezious.com into public/images/ and use them locally. If a download is blocked, hotlink that image.
+
+Style: Montserrat. Yellow 
+#FFDD00, orange 
+#F15A22, grey 
+#F7F7F7. Cards 16px radius, buttons and pills 12px.
+
+Header (sticky): orange hamburger, logo, yellow DELIVERY pill, grey PICK-UP pill, wide grey search field "Find in cheezious" (filters the menu), outlined "Enter the Delivery Address" field, yellow CART button with an orange count badge, yellow LOGIN button. A fixed orange "ORDER NOW" button sits bottom-right on every page and links to /menu.
+
+Home: orange "NOW OPEN G-15, ISLAMABAD" hero banner with an orange strip below. "Explore Menu" with an orange "VIEW ALL" link and a 4-card carousel with orange arrows (thin yellow border, centered image, bold uppercase label; each card links to its /menu category). Then 3 promo cards with captions below, a yellow "Download Our Mobile App" panel, a "Blogs" heading, a "Special Offers & News" newsletter section (yellow wave, megaphone, "let's talk CHEEZY", email field, yellow SUBSCRIBE button), and a grey footer.
+
+/menu: a sticky rounded grey tab bar of white pills with orange circular arrows (active tab yellow, smooth-scrolls to the section, updates on scroll). Product grid on the left (3 columns), sticky grey rounded cart panel on the right (about 400px). Cards are light grey with a white image area, an orange outline heart at the top right, a bold name, a small 3-line description, a bold orange price, a salmon "Starting Price" pill where marked SP, and a white "+ ADD TO CART" button.
+
+Add to cart: a dimmed backdrop with a white box holding a spinning orange pizza-slice icon for about 600 ms, then a centered white modal (orange X, large image, name, description, price, "Choose Your Variation" with a yellow REQUIRED pill, a "Regular" radio, yellow ADD TO CART button, disabled until selected). Adding closes the modal and updates the cart panel (white item cards with thumbnail, name, variation, orange price, orange round trash button, quantity, yellow round "+", orange Total row, yellow CHECKOUT button at the bottom) and the header badge. The empty cart shows a sad bag icon, "YOUR CART IS EMPTY", and "Go ahead and explore top categories." Persist the cart in localStorage. Format prices as "Rs. 1,290".
+
+Mobile: the cart becomes a bottom bar that opens full-screen. The grid is 2 columns, then 1. Tap targets are at least 44px.
+
+Menu data: use the attached menu-data.txt. Anything missing or marked incomplete, copy from the live site's /menu page.
