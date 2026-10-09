@@ -1,248 +1,298 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, Route, Router as WouterRouter, Switch, useLocation } from 'wouter';
+import {
+  ArrowRight,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Frown,
+  Heart,
+  MapPin,
+  Megaphone,
+  Menu as MenuIcon,
+  Pizza,
+  Plus,
+  Search,
+  ShoppingBag,
+  ShoppingCart,
+  Store,
+  Trash2,
+  UserRound,
+  X,
+} from 'lucide-react';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import NotFound from '@/pages/not-found';
-import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
-import {
-  ArrowRight, Award, Bike, Check, ChevronRight, MapPin, Megaphone, Menu,
-  Pizza, Plus, Search, ShoppingCart, Store, UserRound, X,
-} from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { homeMenuCategories, menuCategories, menuItems, type MenuCategory, type MenuItem } from './data/menu';
 
-const queryClient = new QueryClient();
-
-type Notice = { title: string; body: string; eyebrow?: string } | null;
-
-type MenuCategory = 'Pizzas' | 'Burgers' | 'Pasta' | 'Deals';
-type MenuItem = {
-  id: string;
-  name: string;
-  description: string;
-  category: MenuCategory;
-  price: number;
-  photo: string;
-  tag: string;
+const OFFICIAL_MEDIA = {
+  logo: 'https://cheezious.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FmainLogo.c4a33b22.png&w=1200&q=75',
+  promoDelivery: 'https://cheezious.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fe1.1d85fdc1.webp&w=750&q=75',
+  promoAward: 'https://cheezious.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fe22.91d447bb.webp&w=750&q=75',
+  promoLocal: 'https://cheezious.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fe3.b5726675.webp&w=750&q=75',
+  appBanner: 'https://cheezious.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fmobileapp.136ee6c2.png&w=3840&q=75',
+  appPreview: 'https://cheezious.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fmobile.b53e6af2.png&w=1920&q=75',
+  googlePlay: 'https://cheezious.com/_next/static/media/google.9b9b10ed.svg',
+  appStore: 'https://cheezious.com/_next/static/media/apple.50cebbed.svg',
+  footerLogo: 'https://cheezious.com/_next/static/media/footerlogo.19a797d2.svg',
 };
 
-const menuItems: MenuItem[] = [
-  { id: 'cheezious-special', name: 'Cheezious Special', description: 'Chicken, black olives, sausages and bell pepper under a generous layer of cheese.', category: 'Pizzas', price: 1480, photo: '/food-pizza.jpg', tag: 'Cheezy Treats' },
-  { id: 'behari-kabab', name: 'Behari Kabab', description: 'Smoky, tender kabab with a desi spice blend, onions and melty cheese.', category: 'Pizzas', price: 1480, photo: '/food-pizza.jpg', tag: 'Local favourite' },
-  { id: 'sausage-pizza', name: 'Sausage Pizza', description: 'Chicken sausages, pizza sauce and a classic cheese pull in every slice.', category: 'Pizzas', price: 660, photo: '/food-pizza.jpg', tag: 'Cheezy classic' },
-  { id: 'reggy-burger', name: 'Reggy Burger', description: 'A crispy chicken fillet, fresh lettuce and creamy house sauce.', category: 'Burgers', price: 380, photo: '/food-burger.jpg', tag: 'A quick favourite' },
-  { id: 'bazinga-burger', name: 'Bazinga Burger', description: 'Crunchy chicken, cool lettuce and a bold, creamy sauce in a soft bun.', category: 'Burgers', price: 540, photo: '/food-burger.jpg', tag: 'Crispy & saucy' },
-  { id: 'bazinga-supreme', name: 'Bazinga Supreme', description: 'A bigger, bolder chicken burger layered with cheese and signature sauce.', category: 'Burgers', price: 800, photo: '/food-burger.jpg', tag: 'Big bite' },
-  { id: 'crunchy-chicken-pasta', name: 'Crunchy Chicken Pasta', description: 'Creamy pasta with golden crunchy chicken and a savoury cheesy finish.', category: 'Pasta', price: 850, photo: '/food-pasta.svg', tag: 'Comfort food' },
-  { id: 'fettuccine-alfredo', name: 'Fettuccine Alfredo Pasta', description: 'Silky Alfredo sauce, tender chicken and fettuccine tossed until creamy.', category: 'Pasta', price: 990, photo: '/food-pasta.svg', tag: 'Rich & creamy' },
-  { id: 'small-pizza-deal', name: 'Small Pizza Deal', description: 'Pick a Local or Sooper flavour and pair it with a chilled regular drink.', category: 'Deals', price: 1290, photo: '/food-pizza.jpg', tag: 'Easy pick' },
-  { id: 'bazinga-pair', name: 'Bazinga Pair Deal', description: 'Two Bazinga burgers, regular fries and two regular drinks to share.', category: 'Deals', price: 1150, photo: '/food-burger.jpg', tag: 'For two' },
-  { id: 'bazinga-chicken-feast', name: 'Chicken Feast Deal', description: 'Two Bazinga burgers, two chicken pieces, large fries and two drinks.', category: 'Deals', price: 1550, photo: '/food-wings.jpg', tag: 'A table full' },
-  { id: 'triple-bazinga-deal', name: 'Triple Bazinga Deal', description: 'Three Bazinga burgers, large fries and a one-litre drink for the crew.', category: 'Deals', price: 1750, photo: '/food-burger.jpg', tag: 'Made to share' },
-];
-const categories = ['All', 'Pizzas', 'Burgers', 'Pasta', 'Deals'] as const;
-type CategoryFilter = (typeof categories)[number];
+type CartLine = { item: MenuItem; quantity: number };
+type Notice = { title: string; body: string } | null;
+type NewsletterValues = { email: string };
 
-const formatPrice = (price: number) => `Rs. ${price.toLocaleString('en-PK')}`;
+const STORAGE_KEY = 'cheezious-preview-cart-v2';
+const formatPrice = (price: number) => `Rs. ${price.toLocaleString('en-US')}`;
+
+function readCartFromStorage(): Record<string, number> {
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    if (!saved) return {};
+    const parsed = JSON.parse(saved) as Record<string, unknown>;
+    const cart: Record<string, number> = {};
+    for (const [id, quantity] of Object.entries(parsed)) {
+      if (typeof quantity === 'number' && Number.isInteger(quantity) && quantity > 0) cart[id] = quantity;
+    }
+    return cart;
+  } catch {
+    return {};
+  }
+}
 
 function Brand() {
   return (
-    <a className="brand" href="#top" aria-label="Cheezious home">
-      <span className="brand-mark"><Pizza size={27} strokeWidth={2.4} /></span>
-      <span className="brand-name">Cheezious</span>
-    </a>
-  );
-}
-
-function LoadingScreen() {
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    const timer = window.setTimeout(() => setVisible(false), 350);
-    return () => window.clearTimeout(timer);
-  }, []);
-  return (
-    <div className={`loading-screen${visible ? '' : ' is-gone'}`} aria-hidden={!visible}>
-      <div className="loader-brand">
-        <div className="loader-pizza" />
-        <div className="loader-wordmark">chee<span>zious</span></div>
-      </div>
-    </div>
+    <Link className="cx-brand" href="/" aria-label="Cheezious home" data-testid="link-cheezious-home">
+      <img src={OFFICIAL_MEDIA.logo} alt="Cheezious" />
+    </Link>
   );
 }
 
 function Header({
-  onNotice,
   cartCount,
   searchQuery,
   onSearch,
   onOpenCart,
+  onNotice,
 }: {
-  onNotice: (notice: Notice) => void;
   cartCount: number;
   searchQuery: string;
   onSearch: (value: string) => void;
   onOpenCart: () => void;
+  onNotice: (notice: Notice) => void;
 }) {
   const [mode, setMode] = useState<'delivery' | 'pickup'>('delivery');
   const [address, setAddress] = useState('');
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [, setLocation] = useLocation();
+
   const orderMode = (
-    <div className="order-mode" aria-label="Choose order type">
-      <button className={`mode-btn${mode === 'delivery' ? ' selected' : ''}`} onClick={() => setMode('delivery')}><MapPin size={14} /> Delivery</button>
-      <button className={`mode-btn${mode === 'pickup' ? ' selected' : ''}`} onClick={() => setMode('pickup')}><Store size={14} /> Pick-up</button>
+    <div className="cx-order-mode" aria-label="Choose order type">
+      <button
+        type="button"
+        className={mode === 'delivery' ? 'is-selected' : ''}
+        aria-pressed={mode === 'delivery'}
+        onClick={() => setMode('delivery')}
+        data-testid="button-delivery"
+      >
+        <MapPin size={15} /> DELIVERY
+      </button>
+      <button
+        type="button"
+        className={mode === 'pickup' ? 'is-selected' : ''}
+        aria-pressed={mode === 'pickup'}
+        onClick={() => setMode('pickup')}
+        data-testid="button-pickup"
+      >
+        <Store size={15} /> PICK-UP
+      </button>
     </div>
   );
-  const searchField = (
-    <label className="cheez-search">
+
+  const searchField = (id: string) => (
+    <label className="cx-search-field" htmlFor={id}>
       <Search size={16} aria-hidden="true" />
-      <input aria-label="Search the Cheezious menu" type="search" value={searchQuery} onChange={(event) => onSearch(event.target.value)} placeholder="Find in cheezious" />
+      <input
+        id={id}
+        type="search"
+        value={searchQuery}
+        onChange={(event) => onSearch(event.target.value)}
+        placeholder="Find in cheezious"
+        aria-label="Find in Cheezious menu"
+        data-testid={`input-menu-search-${id}`}
+      />
     </label>
   );
+
   const addressField = mode === 'delivery' ? (
-    <label className="cheez-address">
-      <MapPin size={16} aria-hidden="true" />
-      <input aria-label="Delivery address" value={address} onChange={(event) => setAddress(event.target.value)} placeholder="Enter the Delivery Address" />
+    <label className="cx-address-field">
+      <MapPin size={15} aria-hidden="true" />
+      <input
+        value={address}
+        onChange={(event) => setAddress(event.target.value)}
+        placeholder="Enter the Delivery Address"
+        aria-label="Delivery address"
+        data-testid="input-delivery-address"
+      />
       <ChevronRight size={16} aria-hidden="true" />
     </label>
   ) : null;
+
+  const navLinks = (
+    <>
+      <Link href="/" onClick={() => setDrawerOpen(false)} data-testid="link-drawer-home">Home <ChevronRight size={16} /></Link>
+      <Link href="/menu" onClick={() => setDrawerOpen(false)} data-testid="link-drawer-menu">Explore Menu <ChevronRight size={16} /></Link>
+      <a href="/#app" onClick={() => setDrawerOpen(false)} data-testid="link-drawer-app">Download Our App <ChevronRight size={16} /></a>
+      <a href="/#stories" onClick={() => setDrawerOpen(false)} data-testid="link-drawer-blogs">Blogs <ChevronRight size={16} /></a>
+      <a href="/#offers" onClick={() => setDrawerOpen(false)} data-testid="link-drawer-offers">Special Offers &amp; News <ChevronRight size={16} /></a>
+    </>
+  );
+
   return (
-    <header className="cheez-header" id="top">
-      <div className="cheez-header-row">
-        <div className="brand-nav-wrap">
-          <button className="menu-trigger" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+    <header className="cx-header">
+      <div className="cx-header-main">
+        <div className="cx-brand-wrap">
+          <button
+            className="cx-menu-toggle"
+            type="button"
+            aria-label={drawerOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={drawerOpen}
+            onClick={() => setDrawerOpen((open) => !open)}
+            data-testid="button-navigation-menu"
+          >
+            {drawerOpen ? <X size={21} /> : <MenuIcon size={21} />}
           </button>
           <Brand />
         </div>
-        <div className="desktop-controls">
+        <div className="cx-desktop-controls">
           {orderMode}
-          {searchField}
+          {searchField('cx-search-desktop')}
           {addressField}
         </div>
-        <div className="header-actions">
-          <button className="cart-btn" onClick={onOpenCart} aria-label={`Open cart, ${cartCount} items`}>
-            <ShoppingCart size={16} /><span>CART</span><span className="cart-count">{cartCount}</span>
+        <div className="cx-header-actions">
+          <button
+            className="cx-header-action cx-cart-action"
+            type="button"
+            aria-label={`Open cart, ${cartCount} items`}
+            onClick={onOpenCart}
+            data-testid="button-header-cart"
+          >
+            <ShoppingCart size={17} /> <span>CART</span><b className="cx-cart-badge">{cartCount}</b>
           </button>
-          <button className="login-btn" onClick={() => onNotice({ eyebrow: 'Welcome to Cheezious', title: 'Good food brings us together', body: 'This page is a front-end preview. Account sign-in is not connected.' })}><UserRound size={15} /> LOGIN</button>
+          <button
+            className="cx-header-action"
+            type="button"
+            onClick={() => onNotice({ title: 'Welcome to Cheezious', body: 'Account sign-in is not connected in this front-end preview.' })}
+            data-testid="button-header-login"
+          >
+            <UserRound size={16} /> <span>LOGIN</span>
+          </button>
         </div>
       </div>
-      <div className="mobile-controls">
+      <div className="cx-mobile-controls">
         {orderMode}
-        {searchField}
+        {searchField('cx-search-mobile')}
         {addressField}
       </div>
-      {menuOpen && <div className="drawer-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
-        <nav className="mobile-drawer" aria-label="Cheezious navigation">
-          <div className="drawer-heading"><span>Explore Cheezious</span><button aria-label="Close menu" onClick={() => setMenuOpen(false)}><X size={19} /></button></div>
-          <a href="#menu" onClick={() => setMenuOpen(false)}>Explore Menu <ChevronRight size={16} /></a>
-          <a href="#app" onClick={() => setMenuOpen(false)}>Download Our App <ChevronRight size={16} /></a>
-          <a href="#stories" onClick={() => setMenuOpen(false)}>Blogs <ChevronRight size={16} /></a>
-          <a href="#offers" onClick={() => setMenuOpen(false)}>Special Offers & News <ChevronRight size={16} /></a>
-        </nav>
-      </div>}
+      {drawerOpen && (
+        <div className="cx-drawer-backdrop" onClick={() => setDrawerOpen(false)}>
+          <nav className="cx-drawer" aria-label="Cheezious navigation" onClick={(event) => event.stopPropagation()}>
+            <div className="cx-drawer-heading">
+              <strong>Explore Cheezious</strong>
+              <button type="button" aria-label="Close menu" onClick={() => setDrawerOpen(false)} data-testid="button-close-navigation"><X size={19} /></button>
+            </div>
+            {navLinks}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
 
 function Hero() {
   return (
-    <section className="hero-banner" aria-label="Now open in G-15, Islamabad">
-      <div className="hero-pattern" aria-hidden="true" />
-      <div className="hero-food" aria-hidden="true"><img src="/food-pizza.jpg" alt="" /></div>
-      <div className="hero-copy">
+    <section className="cx-hero" aria-label="Now open in G-15, Islamabad">
+      <div className="cx-hero-pattern" aria-hidden="true" />
+      <div className="cx-hero-food"><img src="/food-pizza.jpg" alt="Cheezious loaded pizza" /></div>
+      <div className="cx-hero-copy">
         <h1><span>NOW OPEN</span><strong>G-15, ISLAMABAD</strong></h1>
       </div>
-      <div className="hero-orange-strip" />
+      <div className="cx-hero-strip" />
     </section>
   );
 }
 
-function PromoCards({ onOrder }: { onOrder: () => void }) {
-  const promos = [
-    { className: 'delivery', overline: 'DELIVERING', graphic: 'CHEEZY\\nKHUSHIYAN', caption: 'Delivering cheezy khushiyan', icon: <Bike size={54} strokeWidth={1.6} /> },
-    { className: 'award', overline: 'THE BRAND OF', graphic: 'CHEEZY\\nHEARTS', caption: 'Fastest Growing Brand of the Year', icon: <Award size={58} strokeWidth={1.6} /> },
-    { className: 'local', overline: 'FOR THE LOVE OF', graphic: 'LOCAL\\nFLAVORS', caption: 'Made with fresh, local ingredients and love', icon: <Pizza size={54} strokeWidth={1.6} /> },
-  ];
-  return <section className="promo-strip site-width" aria-label="Why Cheezious">
-    {promos.map((item, index) => <article className="promo-tile" key={item.caption}>
-      <div className={`promo-art promo-art-${item.className}`}>
-        <span className="promo-art-overline">{item.overline}</span>
-        <strong>{item.graphic.split('\\n').map((line) => <span key={line}>{line}</span>)}</strong>
-        <span className="promo-art-icon">{item.icon}</span>
-        {index === 2 && <button className="promo-order-tab" onClick={onOrder}>ORDER NOW</button>}
-      </div>
-      <p>{item.caption}</p>
-    </article>)}
-  </section>;
-}
+function HomeMenuCarousel() {
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const scroll = (direction: -1 | 1) => {
+    carouselRef.current?.scrollBy({ left: direction * 270, behavior: 'smooth' });
+  };
 
-function MenuSection({
-  searchQuery,
-  onAddToCart,
-}: {
-  searchQuery: string;
-  onAddToCart: (item: MenuItem) => void;
-}) {
-  const [category, setCategory] = useState<CategoryFilter>('All');
-  const normalizedSearch = searchQuery.trim().toLowerCase();
-  const filtered = menuItems.filter((item) => {
-    const categoryMatches = category === 'All' || item.category === category;
-    const searchMatches = !normalizedSearch || `${item.name} ${item.description} ${item.category}`.toLowerCase().includes(normalizedSearch);
-    return categoryMatches && searchMatches;
-  });
   return (
-    <section className="menu-area site-width" id="menu">
-      <div className="menu-title-row">
-        <h2>Explore Menu</h2>
-        <div className="menu-heading-actions">
-          <button className="text-action" onClick={() => setCategory('All')}>VIEW ALL</button>
-          <a className="order-action" href="#menu-grid">ORDER NOW</a>
+    <section className="cx-home-menu cx-site-width" id="menu">
+      <div className="cx-section-heading">
+        <div><span className="cx-eyebrow">Good food, good mood</span><h2>Explore Menu</h2></div>
+        <div className="cx-section-actions">
+          <Link className="cx-view-all" href="/menu" data-testid="link-menu-view-all">VIEW ALL <ArrowRight size={14} /></Link>
+          <div className="cx-carousel-arrows">
+            <button type="button" aria-label="Scroll menu categories left" onClick={() => scroll(-1)} data-testid="button-carousel-left"><ChevronLeft size={18} /></button>
+            <button type="button" aria-label="Scroll menu categories right" onClick={() => scroll(1)} data-testid="button-carousel-right"><ChevronRight size={18} /></button>
+          </div>
         </div>
       </div>
-      <div className="category-pills" role="tablist" aria-label="Menu categories">
-        {categories.map((item) => <button key={item} role="tab" aria-selected={category === item} className={category === item ? 'active' : ''} onClick={() => setCategory(item)}>{item}</button>)}
+      <div className="cx-home-category-carousel" ref={carouselRef}>
+        {homeMenuCategories.map((category) => (
+          <Link
+            href={`/menu?category=${category.id}`}
+            key={category.id}
+            className="cx-home-category-card"
+            data-testid={`link-home-category-${category.id}`}
+          >
+            <span className="cx-home-category-image"><img src={category.image} alt="" loading="lazy" /></span>
+            <strong>{category.name}</strong>
+          </Link>
+        ))}
       </div>
-      {filtered.length ? <div className="food-grid" id="menu-grid">
-        {filtered.map((item) => <article className="food-card" key={item.id}>
-          <div className="food-card-image"><img src={item.photo} alt={item.name} /><span>{item.category}</span></div>
-          <div className="food-card-info">
-            <h3>{item.name}</h3>
-            <p>{item.description}</p>
-            <div className="food-card-bottom">
-              <strong>{formatPrice(item.price)}</strong>
-              <button aria-label={`Add ${item.name} to cart`} title={`Add ${item.name} to cart`} onClick={() => onAddToCart(item)}><Plus size={17} /></button>
-            </div>
-          </div>
-        </article>)}
-      </div> : <p className="menu-empty">No menu items match “{searchQuery}”. Try another search.</p>}
+    </section>
+  );
+}
+
+function PromoCards() {
+  const promos = [
+    { image: OFFICIAL_MEDIA.promoDelivery, alt: 'Cheezious delivery', caption: 'Delivering cheezy khushiyan' },
+    { image: OFFICIAL_MEDIA.promoAward, alt: 'Cheezious brand recognition', caption: 'Fastest Growing Brand of the Year' },
+    { image: OFFICIAL_MEDIA.promoLocal, alt: 'Local ingredients and flavors', caption: 'Made with fresh, local ingredients and love' },
+  ];
+
+  return (
+    <section className="cx-promo-grid cx-site-width" aria-label="About Cheezious">
+      {promos.map((promo) => (
+        <article className="cx-promo-card" key={promo.caption}>
+          <img src={promo.image} alt={promo.alt} loading="lazy" />
+          <p>{promo.caption}</p>
+        </article>
+      ))}
     </section>
   );
 }
 
 function AppBand() {
   return (
-    <section className="app-promo-section site-width" id="app">
-      <div className="app-promo-panel">
-        <div className="phone-scene" aria-hidden="true">
-          <div className="phone">
-            <div className="phone-notch" />
-            <div className="phone-head">chee<span>zious</span><small>GOOD FOOD, ONE TAP AWAY</small></div>
-            <div className="phone-pizza" />
-            <div className="phone-mini-grid"><span /><span /><span /></div>
-            <div className="phone-line" /><div className="phone-line short" />
-          </div>
-        </div>
-        <div className="app-copy">
-          <div className="app-copy-heading"><span className="eyebrow">Cheezious, wherever you are</span><h2>Download Our<br />Mobile App</h2></div>
+    <section className="cx-app-section cx-site-width" id="app">
+      <div className="cx-app-panel">
+        <img className="cx-app-background" src={OFFICIAL_MEDIA.appBanner} alt="" loading="lazy" />
+        <div className="cx-app-phone"><img src={OFFICIAL_MEDIA.appPreview} alt="Cheezious mobile app preview" loading="lazy" /></div>
+        <div className="cx-app-copy">
+          <span className="cx-eyebrow">Cheezious, wherever you are</span>
+          <h2>Download Our<br />Mobile App</h2>
           <p>Elevate your experience by downloading our mobile app for seamless ordering experience.</p>
-          <div className="app-social-row" aria-label="Join the Cheezious community">
-            <span className="app-avatar avatar-one">S</span><span className="app-avatar avatar-two">A</span><span className="app-avatar avatar-three">M</span><span className="app-avatar avatar-four">H</span><a href="#menu" aria-label="Explore the menu"><ArrowRight size={17} /></a>
-          </div>
-          <div className="store-buttons" aria-label="App download badges">
-            <a className="store-button" href="#app"><span className="store-symbol">▶</span><span>GET IT ON<strong>Google Play</strong></span></a>
-            <a className="store-button" href="#app"><span className="store-symbol">●</span><span>Download on the<strong>App Store</strong></span></a>
+          <div className="cx-store-links">
+            <a href="#app" aria-label="Google Play app listing"><img src={OFFICIAL_MEDIA.googlePlay} alt="Google Play" /></a>
+            <a href="#app" aria-label="Apple App Store listing"><img src={OFFICIAL_MEDIA.appStore} alt="App Store" /></a>
           </div>
         </div>
-        <div className="app-pizza-sticker" aria-hidden="true"><Pizza size={42} /></div>
+        <span className="cx-app-sticker" aria-hidden="true"><Pizza size={37} /></span>
       </div>
     </section>
   );
@@ -250,92 +300,472 @@ function AppBand() {
 
 function Stories() {
   const stories = [
-    { title: 'Burgers Beyond Borders: Iconic Fast-Food Classics', photo: '/food-burger.jpg', date: '11 JUN 2026' },
-    { title: 'The joy of bringing local flavours to the table', photo: '/food-pizza.jpg', date: '24 JUL 2026' },
-    { title: 'A little extra cheese makes every moment better', photo: '/food-fries.jpg', date: '09 AUG 2026' },
+    { title: 'A little extra cheese makes every moment better', photo: '/food-pizza.jpg', date: 'CHEEZIOUS STORIES' },
+    { title: 'Fresh flavors, made for sharing', photo: '/food-burger.jpg', date: 'FROM OUR KITCHEN' },
+    { title: 'Find your next favorite bite', photo: '/food-wings.jpg', date: 'MENU SPOTLIGHT' },
   ];
   return (
-    <section className="blogs-section site-width" id="stories">
-      <div className="blogs-heading"><h2>Blogs</h2><a className="text-action" href="#stories">VIEW ALL</a></div>
-      <div className="blogs-grid">{stories.map((story) => <article className="blog-tile" key={story.title}>
-        <img src={story.photo} alt="" /><time>{story.date}</time><h3>{story.title}</h3>
-      </article>)}</div>
-    </section>
-  );
-}
-
-function Newsletter() {
-  const [email, setEmail] = useState('');
-  const [status, setStatus] = useState('');
-  const submit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!email.trim()) return;
-    setStatus('Thanks for subscribing');
-    setEmail('');
-  };
-  return (
-    <section className="newsletter-section" id="offers">
-      <svg className="newsletter-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M0 0h1440v45c-57 0-78 45-136 45s-62-59-118-59-66 85-132 85-81-68-148-68-72 58-132 58-65-83-128-83-76 91-140 91-71-67-137-67-74 45-136 45-92-47-151-47-75 43-129 43S51 54 0 54V0z" />
-      </svg>
-      <div className="newsletter-content site-width">
-        <div className="newsletter-copy">
-          <h2>Special Offers &amp; News</h2>
-          <p>Subscribe now for news, promotions and more delivered right to your inbox.</p>
-          <form className="newsletter-form" onSubmit={submit}>
-            <input type="email" required aria-label="Email address" placeholder="Your Email Address" value={email} onChange={(event) => { setEmail(event.target.value); setStatus(''); }} />
-            <button type="submit">{status ? <><Check size={14} /> SUBSCRIBED</> : 'SUBSCRIBE'}</button>
-          </form>
-          {status && <div className="newsletter-status" role="status">{status}</div>}
-        </div>
-        <div className="newsletter-graphic" aria-hidden="true"><Megaphone size={102} strokeWidth={1.4} /><span>let’s talk<br /><strong>CHEEZY</strong></span></div>
+    <section className="cx-stories cx-site-width" id="stories">
+      <div className="cx-section-heading cx-simple-heading">
+        <h2>Blogs</h2>
+        <a className="cx-view-all" href="#stories" data-testid="link-blog-view-all">VIEW ALL <ArrowRight size={14} /></a>
+      </div>
+      <div className="cx-story-grid">
+        {stories.map((story) => (
+          <article className="cx-story-card" key={story.title}>
+            <img src={story.photo} alt="" loading="lazy" />
+            <div><span>{story.date}</span><h3>{story.title}</h3><a href="#stories">READ MORE <ArrowRight size={13} /></a></div>
+          </article>
+        ))}
       </div>
     </section>
   );
 }
 
-function Footer({ onNotice }: { onNotice: (notice: Notice) => void }) {
-  const show = (label: string) => onNotice({ eyebrow: 'Cheezious', title: label, body: 'This page is a front-end preview. This link is not connected to an account or policy service.' });
+function Newsletter() {
+  const form = useForm<NewsletterValues>({ defaultValues: { email: '' }, mode: 'onSubmit' });
+  const [subscribed, setSubscribed] = useState(false);
+  const subscribe = form.handleSubmit(({ email }) => {
+    if (!email.trim()) return;
+    setSubscribed(true);
+    form.reset();
+  });
+
   return (
-    <footer className="simple-footer">
-      <a className="footer-logo-mark" href="#top" aria-label="Cheezious home"><Pizza size={18} /></a>
-      <p>© Cheezious. Copyright © 2024 All Rights Reserved.</p>
-      <div><button onClick={() => show('Terms & Conditions')}>TERMS &amp; CONDITIONS</button><span>|</span><button onClick={() => show('Privacy Policy')}>PRIVACY POLICY</button></div>
+    <section className="cx-newsletter" id="offers">
+      <svg className="cx-newsletter-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 0h1440v45c-57 0-78 45-136 45s-62-59-118-59-66 85-132 85-81-68-148-68-72 58-132 58-65-83-128-83-76 91-140 91-71-67-137-67-74 45-136 45-92-47-151-47-75 43-129 43S51 54 0 54V0z" />
+      </svg>
+      <div className="cx-newsletter-inner cx-site-width">
+        <div className="cx-newsletter-copy">
+          <span className="cx-eyebrow">Stay in the loop</span>
+          <h2>Special Offers &amp; News</h2>
+          <p>Subscribe now for news, promotions and more delivered right to your inbox.</p>
+          <Form {...form}>
+            <form className="cx-newsletter-form" onSubmit={subscribe} noValidate>
+              <FormField
+                control={form.control}
+                name="email"
+                rules={{
+                  required: 'Enter your email address.',
+                  pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Enter a valid email address.' },
+                }}
+                render={({ field }) => (
+                  <FormItem className="cx-newsletter-field">
+                    <FormControl>
+                      <input type="email" placeholder="Your Email Address" aria-label="Email address" {...field} data-testid="input-newsletter-email" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <button type="submit" data-testid="button-newsletter-subscribe">
+                {subscribed ? <><Check size={14} /> SUBSCRIBED</> : 'SUBSCRIBE'}
+              </button>
+            </form>
+          </Form>
+          {subscribed && <p className="cx-subscribe-status" role="status">Thanks for subscribing.</p>}
+        </div>
+        <div className="cx-newsletter-art" aria-hidden="true">
+          <span>let’s talk<br /><strong>CHEEZY</strong></span><Megaphone size={96} strokeWidth={1.5} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HomePage() {
+  return (
+    <>
+      <main className="cx-home">
+        <Hero />
+        <HomeMenuCarousel />
+        <PromoCards />
+        <AppBand />
+        <Stories />
+        <Newsletter />
+      </main>
+    </>
+  );
+}
+
+function MenuTabs({ activeCategory, onSelect }: { activeCategory: string; onSelect: (id: string) => void }) {
+  const tabsRef = useRef<HTMLDivElement>(null);
+
+  return (
+    <div className="cx-category-tabs-wrap">
+      <button
+        className="cx-tabs-arrow"
+        type="button"
+        aria-label="Scroll categories left"
+        onClick={() => tabsRef.current?.scrollBy({ left: -260, behavior: 'smooth' })}
+        data-testid="button-category-scroll-left"
+      >
+        <ChevronLeft size={18} />
+      </button>
+      <nav className="cx-category-tabs" aria-label="Menu categories" ref={tabsRef}>
+        {menuCategories.map((category) => (
+          <button
+            key={category.id}
+            className={activeCategory === category.id ? 'is-active' : ''}
+            type="button"
+            aria-current={activeCategory === category.id ? 'true' : undefined}
+            onClick={() => onSelect(category.id)}
+            data-testid={`button-category-${category.id}`}
+          >
+            {category.name}
+          </button>
+        ))}
+      </nav>
+      <button
+        className="cx-tabs-arrow"
+        type="button"
+        aria-label="Scroll categories right"
+        onClick={() => tabsRef.current?.scrollBy({ left: 260, behavior: 'smooth' })}
+        data-testid="button-category-scroll-right"
+      >
+        <ChevronRight size={18} />
+      </button>
+    </div>
+  );
+}
+
+function ProductCard({
+  item,
+  liked,
+  onLike,
+  onAdd,
+}: {
+  item: MenuItem;
+  liked: boolean;
+  onLike: () => void;
+  onAdd: () => void;
+}) {
+  return (
+    <article className="cx-product-card" data-testid={`card-product-${item.id}`}>
+      <div className="cx-product-image">
+        <img src={item.image} alt={item.name} loading="lazy" />
+        <button
+          type="button"
+          className={`cx-favorite${liked ? ' is-liked' : ''}`}
+          aria-label={liked ? `Remove ${item.name} from favorites` : `Add ${item.name} to favorites`}
+          aria-pressed={liked}
+          onClick={onLike}
+          data-testid={`button-favorite-${item.id}`}
+        >
+          <Heart size={19} fill={liked ? 'currentColor' : 'none'} />
+        </button>
+      </div>
+      <div className="cx-product-info">
+        <h3>{item.name}</h3>
+        <p className="cx-product-description">{item.description || 'A tasty extra to add to your order.'}</p>
+        <div className="cx-product-price">
+          <strong>{formatPrice(item.price)}</strong>
+          {item.startingPrice && <span>Starting Price</span>}
+        </div>
+        <button className="cx-add-button" type="button" onClick={onAdd} data-testid={`button-add-${item.id}`}>
+          <Plus size={15} /> ADD TO CART
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function CartPanel({
+  lines,
+  total,
+  overlay = false,
+  onClose,
+  onRemove,
+  onIncrease,
+  onCheckout,
+}: {
+  lines: CartLine[];
+  total: number;
+  overlay?: boolean;
+  onClose?: () => void;
+  onRemove: (id: string) => void;
+  onIncrease: (id: string) => void;
+  onCheckout: () => void;
+}) {
+  const itemCount = lines.reduce((sum, line) => sum + line.quantity, 0);
+
+  return (
+    <aside className={`cx-cart-panel${overlay ? ' is-overlay-panel' : ''}`} role={overlay ? 'dialog' : 'complementary'} aria-modal={overlay || undefined} aria-labelledby="cx-cart-title">
+      <div className="cx-cart-heading">
+        <div><span>Your Cheezious order</span><h2 id="cx-cart-title">Your Cart <small>({itemCount})</small></h2></div>
+        {onClose && <button className="cx-cart-close" type="button" aria-label="Close cart" onClick={onClose} data-testid="button-close-cart"><X size={19} /></button>}
+      </div>
+      {lines.length > 0 ? (
+        <>
+          <div className="cx-cart-lines">
+            {lines.map(({ item, quantity }) => (
+              <article className="cx-cart-line" key={item.id} data-testid={`row-cart-${item.id}`}>
+                <img src={item.image} alt="" />
+                <div className="cx-cart-line-main">
+                  <strong>{item.name}</strong>
+                  <span>Regular · {formatPrice(item.price)}</span>
+                  <div className="cx-quantity-row">
+                    <span>Qty: {quantity}</span>
+                    <button type="button" aria-label={`Add one ${item.name}`} onClick={() => onIncrease(item.id)} data-testid={`button-increase-${item.id}`}><Plus size={14} /></button>
+                  </div>
+                </div>
+                <div className="cx-cart-line-side">
+                  <strong>{formatPrice(item.price * quantity)}</strong>
+                  <button type="button" className="cx-remove-item" aria-label={`Remove ${item.name}`} onClick={() => onRemove(item.id)} data-testid={`button-remove-${item.id}`}><Trash2 size={15} /></button>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="cx-cart-summary">
+            <div><span>Total</span><strong>{formatPrice(total)}</strong></div>
+            <p>Prices are shown for preview only.</p>
+            <button className="cx-checkout-button" type="button" onClick={onCheckout} data-testid="button-checkout">CHECKOUT <ArrowRight size={16} /></button>
+          </div>
+        </>
+      ) : (
+        <div className="cx-empty-cart" data-testid="status-cart-empty">
+          <div className="cx-empty-bag"><ShoppingBag size={39} /><Frown size={19} /></div>
+          <strong>YOUR CART IS EMPTY</strong>
+          <p>Go ahead and explore top categories.</p>
+          {onClose && <button type="button" onClick={onClose} data-testid="button-empty-cart-menu">EXPLORE MENU</button>}
+        </div>
+      )}
+    </aside>
+  );
+}
+
+function MobileCartBar({ count, total, onOpen }: { count: number; total: number; onOpen: () => void }) {
+  return (
+    <button className="cx-mobile-cart-bar" type="button" onClick={onOpen} data-testid="button-mobile-cart-bar">
+      <span className="cx-mobile-cart-count"><ShoppingCart size={17} /> {count} {count === 1 ? 'ITEM' : 'ITEMS'}</span>
+      <strong>{count ? formatPrice(total) : 'VIEW CART'}</strong>
+      <ArrowRight size={17} />
+    </button>
+  );
+}
+
+function MenuPage({
+  searchQuery,
+  lines,
+  total,
+  onAdd,
+  onOpenCart,
+  onRemove,
+  onIncrease,
+  onCheckout,
+}: {
+  searchQuery: string;
+  lines: CartLine[];
+  total: number;
+  onAdd: (item: MenuItem) => void;
+  onOpenCart: () => void;
+  onRemove: (id: string) => void;
+  onIncrease: (id: string) => void;
+  onCheckout: () => void;
+}) {
+  const [activeCategory, setActiveCategory] = useState(menuCategories[0].id);
+  const [favorites, setFavorites] = useState<Record<string, boolean>>({});
+  const query = searchQuery.trim().toLowerCase();
+  const matchingItems = useMemo(
+    () => menuItems.filter((item) => !query || `${item.name} ${item.description} ${item.categoryId}`.toLowerCase().includes(query)),
+    [query],
+  );
+
+  const selectCategory = (id: string) => {
+    setActiveCategory(id);
+    document.getElementById(`cx-category-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('category');
+    if (requested && menuCategories.some((category) => category.id === requested)) {
+      setActiveCategory(requested);
+      window.setTimeout(() => document.getElementById(`cx-category-${requested}`)?.scrollIntoView({ block: 'start' }), 80);
+    }
+  }, []);
+
+  useEffect(() => {
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-cx-category]'));
+    if (!sections.length) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        const next = visible?.target.getAttribute('data-cx-category');
+        if (next) setActiveCategory(next);
+      },
+      { rootMargin: '-150px 0px -68% 0px', threshold: 0 },
+    );
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [matchingItems.length]);
+
+  const count = lines.reduce((sum, line) => sum + line.quantity, 0);
+
+  return (
+    <main className="cx-menu-page">
+      <div className="cx-menu-intro cx-site-width">
+        <div><span className="cx-eyebrow">The good stuff</span><h1>Explore Menu</h1></div>
+        <p>Made fresh. Made to share. Find your next favorite.</p>
+      </div>
+      <MenuTabs activeCategory={activeCategory} onSelect={selectCategory} />
+      <div className="cx-menu-layout cx-site-width">
+        <div className="cx-menu-results">
+          {query && <div className="cx-search-summary"><Search size={15} /> Results for “{searchQuery}” <span>{matchingItems.length} items</span></div>}
+          {matchingItems.length === 0 ? (
+            <p className="cx-no-results" role="status">No menu items match “{searchQuery}”. Try another search.</p>
+          ) : (
+            menuCategories.map((category: MenuCategory) => {
+              const categoryItems = matchingItems.filter((item) => item.categoryId === category.id);
+              if (!categoryItems.length) return null;
+              return (
+                <section
+                  className="cx-menu-category"
+                  id={`cx-category-${category.id}`}
+                  data-cx-category={category.id}
+                  key={category.id}
+                >
+                  <div className="cx-menu-category-heading">
+                    <div><span className="cx-eyebrow">Cheezious menu</span><h2>{category.name}</h2></div>
+                    <span>{categoryItems.length} items</span>
+                  </div>
+                  <div className="cx-products-grid">
+                    {categoryItems.map((item) => (
+                      <ProductCard
+                        item={item}
+                        key={item.id}
+                        liked={Boolean(favorites[item.id])}
+                        onLike={() => setFavorites((current) => ({ ...current, [item.id]: !current[item.id] }))}
+                        onAdd={() => onAdd(item)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })
+          )}
+        </div>
+        <div className="cx-desktop-cart">
+          <CartPanel lines={lines} total={total} onRemove={onRemove} onIncrease={onIncrease} onCheckout={onCheckout} />
+        </div>
+      </div>
+      <MobileCartBar count={count} total={total} onOpen={onOpenCart} />
+    </main>
+  );
+}
+
+function Footer({ onNotice }: { onNotice: (notice: Notice) => void }) {
+  return (
+    <footer className="cx-footer">
+      <img src={OFFICIAL_MEDIA.footerLogo} alt="Cheezious" />
+      <p>Cheezious Copyright © 2026. All Rights Reserved.</p>
+      <div>
+        <button type="button" onClick={() => onNotice({ title: 'Terms & Conditions', body: 'This preview does not connect to the Cheezious terms service.' })} data-testid="button-terms">TERMS &amp; CONDITIONS</button>
+        <span>|</span>
+        <button type="button" onClick={() => onNotice({ title: 'Privacy Policy', body: 'This preview does not connect to the Cheezious privacy service.' })} data-testid="button-privacy">PRIVACY POLICY</button>
+      </div>
     </footer>
   );
 }
 
-function CartDrawer({
-  cart,
+function OrderNow() {
+  return <Link className="cx-order-now" href="/menu" data-testid="link-order-now">ORDER NOW <ArrowRight size={16} /></Link>;
+}
+
+function AddLoading({ item }: { item: MenuItem | null }) {
+  if (!item) return null;
+  return (
+    <div className="cx-loading-backdrop" role="status" aria-live="polite" aria-label={`Adding ${item.name}`}>
+      <div className="cx-loading-card"><Pizza size={42} /><strong>Adding to your order</strong><span>Please wait a moment</span></div>
+    </div>
+  );
+}
+
+function VariationModal({
+  item,
+  selected,
+  onSelect,
   onClose,
+  onAdd,
 }: {
-  cart: Record<string, number>;
+  item: MenuItem | null;
+  selected: boolean;
+  onSelect: () => void;
   onClose: () => void;
+  onAdd: () => void;
 }) {
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-  const items = menuItems.filter((item) => (cart[item.id] ?? 0) > 0);
-  const total = items.reduce((sum, item) => sum + item.price * (cart[item.id] ?? 0), 0);
+    if (!item) return;
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [item, onClose]);
+
+  if (!item) return null;
   return (
-    <div className="cart-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <aside className="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cart-title">
-        <div className="cart-panel-heading">
-          <div><span>Your Cheezious order</span><h2 id="cart-title">Your Cart <small>({items.reduce((count, item) => count + cart[item.id], 0)})</small></h2></div>
-          <button aria-label="Close cart" onClick={onClose}><X size={20} /></button>
+    <div className="cx-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="cx-variation-modal" role="dialog" aria-modal="true" aria-labelledby="cx-modal-title">
+        <button className="cx-modal-close" type="button" aria-label="Close item options" onClick={onClose} data-testid="button-close-item-modal"><X size={21} /></button>
+        <div className="cx-modal-image"><img src={item.image} alt={item.name} /></div>
+        <div className="cx-modal-content">
+          <span className="cx-modal-category">{menuCategories.find((category) => category.id === item.categoryId)?.name}</span>
+          <h2 id="cx-modal-title">{item.name}</h2>
+          <p>{item.description || 'A tasty extra to add to your order.'}</p>
+          <strong className="cx-modal-price">{formatPrice(item.price)}</strong>
+          <div className="cx-variation-heading"><h3>Choose Your Variation</h3><span>REQUIRED</span></div>
+          <label className={`cx-variation-option${selected ? ' is-selected' : ''}`}>
+            <input type="radio" name="menu-variation" checked={selected} onChange={onSelect} data-testid="radio-variation-regular" />
+            <span className="cx-custom-radio" />
+            <span>Regular</span>
+            <strong>{formatPrice(item.price)}</strong>
+          </label>
+          <button className="cx-modal-add" type="button" disabled={!selected} onClick={onAdd} data-testid="button-confirm-add">
+            ADD TO CART <span>{formatPrice(item.price)}</span>
+          </button>
         </div>
-        {items.length ? <>
-          <div className="cart-line-items">{items.map((item) => <div className="cart-line" key={item.id}>
-            <img src={item.photo} alt="" />
-            <div><strong>{item.name}</strong><span>{cart[item.id] ?? 0} × {formatPrice(item.price)}</span></div>
-            <b>{formatPrice(item.price * (cart[item.id] ?? 0))}</b>
-          </div>)}</div>
-          <div className="cart-subtotal"><span>Subtotal</span><strong>{formatPrice(total)}</strong></div>
-          <p className="cart-preview-note">Ordering is a front-end preview; checkout is not connected.</p>
-        </> : <div className="cart-empty"><ShoppingCart size={30} /><strong>Your cart is empty</strong><span>Add a favourite from the menu to get started.</span><button onClick={onClose}>EXPLORE MENU</button></div>}
-      </aside>
+      </section>
+    </div>
+  );
+}
+
+function CartOverlay({
+  open,
+  lines,
+  total,
+  onClose,
+  onRemove,
+  onIncrease,
+  onCheckout,
+}: {
+  open: boolean;
+  lines: CartLine[];
+  total: number;
+  onClose: () => void;
+  onRemove: (id: string) => void;
+  onIncrease: (id: string) => void;
+  onCheckout: () => void;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open, onClose]);
+
+  if (!open) return null;
+  return (
+    <div className="cx-cart-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <CartPanel
+        lines={lines}
+        total={total}
+        overlay
+        onClose={onClose}
+        onRemove={onRemove}
+        onIncrease={onIncrease}
+        onCheckout={onCheckout}
+      />
     </div>
   );
 }
@@ -343,52 +773,183 @@ function CartDrawer({
 function NoticeDialog({ notice, onClose }: { notice: Notice; onClose: () => void }) {
   useEffect(() => {
     if (!notice) return;
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, [notice, onClose]);
+
   if (!notice) return null;
-  return <div className="notice-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="notice-card" role="dialog" aria-modal="true" aria-labelledby="notice-title"><button className="notice-close" aria-label="Close dialog" onClick={onClose}><X size={18} /></button><div className="notice-label">{notice.eyebrow ?? 'Cheezious'}</div><h3 id="notice-title">{notice.title}</h3><p>{notice.body}</p><button className="button button-dark" onClick={onClose}>Got it <ArrowRight size={14} /></button></section></div>;
+  return (
+    <div className="cx-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="cx-notice-modal" role="dialog" aria-modal="true" aria-labelledby="cx-notice-title">
+        <button type="button" className="cx-modal-close" aria-label="Close message" onClick={onClose} data-testid="button-close-notice"><X size={20} /></button>
+        <span className="cx-eyebrow">Cheezious</span>
+        <h2 id="cx-notice-title">{notice.title}</h2>
+        <p>{notice.body}</p>
+        <button className="cx-notice-ok" type="button" onClick={onClose} data-testid="button-notice-ok">GOT IT</button>
+      </section>
+    </div>
+  );
 }
 
-function Home() {
-  const [notice, setNotice] = useState<Notice>(null);
-  const [cart, setCart] = useState<Record<string, number>>({});
-  const [cartOpen, setCartOpen] = useState(false);
+function NotFoundPage() {
+  return (
+    <main className="cx-not-found">
+      <Pizza size={42} />
+      <h1>We couldn’t find that page</h1>
+      <p>Head back to the menu and find something cheezy.</p>
+      <Link href="/menu" className="cx-notice-ok" data-testid="link-not-found-menu">EXPLORE MENU</Link>
+    </main>
+  );
+}
+
+function AppShell() {
+  const [location, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
-  const cartCount = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
-  const closeNotice = () => setNotice(null);
-  const addToCart = (item: MenuItem) => setCart((current) => ({ ...current, [item.id]: (current[item.id] ?? 0) + 1 }));
+  const [cart, setCart] = useState<Record<string, number>>(readCartFromStorage);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [loadingItem, setLoadingItem] = useState<MenuItem | null>(null);
+  const [modalItem, setModalItem] = useState<MenuItem | null>(null);
+  const [selectedVariation, setSelectedVariation] = useState(false);
+  const [notice, setNotice] = useState<Notice>(null);
+  const addTimer = useRef<number | null>(null);
+
+  const lines = useMemo(
+    () => menuItems.flatMap((item) => {
+      const quantity = cart[item.id] ?? 0;
+      return quantity > 0 ? [{ item, quantity }] : [];
+    }),
+    [cart],
+  );
+  const cartCount = lines.reduce((sum, line) => sum + line.quantity, 0);
+  const cartTotal = lines.reduce((sum, line) => sum + line.item.price * line.quantity, 0);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+  }, [cart]);
+
+  useEffect(() => {
+    document.body.style.overflow = cartOpen || Boolean(modalItem) || Boolean(loadingItem) || Boolean(notice) ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [cartOpen, modalItem, loadingItem, notice]);
+
+  useEffect(() => () => {
+    if (addTimer.current !== null) window.clearTimeout(addTimer.current);
+  }, []);
+
+  useEffect(() => {
+    const isMenu = location.split('?')[0] === '/menu';
+    document.title = isMenu ? 'Menu | Cheezious' : 'Cheezious | Khushiyan Served Hot';
+    const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    if (description) {
+      description.content = isMenu
+        ? 'Browse the Cheezious menu: pizzas, burgers, pasta, starters, sides and more.'
+        : 'Explore Cheezious pizzas, burgers, sides, special offers, and stories made for sharing.';
+    }
+  }, [location]);
+
+  const handleSearch = (value: string) => {
+    setSearchQuery(value);
+    if (value.trim() && location.split('?')[0] !== '/menu') setLocation('/menu');
+  };
+
+  const beginAdd = (item: MenuItem) => {
+    if (addTimer.current !== null) window.clearTimeout(addTimer.current);
+    setLoadingItem(item);
+    addTimer.current = window.setTimeout(() => {
+      setLoadingItem(null);
+      setModalItem(item);
+      setSelectedVariation(false);
+      addTimer.current = null;
+    }, 600);
+  };
+
+  const addSelectedItem = () => {
+    if (!modalItem || !selectedVariation) return;
+    setCart((current) => ({ ...current, [modalItem.id]: (current[modalItem.id] ?? 0) + 1 }));
+    setModalItem(null);
+    setSelectedVariation(false);
+  };
+
+  const increaseItem = (id: string) => {
+    setCart((current) => ({ ...current, [id]: (current[id] ?? 0) + 1 }));
+  };
+
+  const removeItem = (id: string) => {
+    setCart((current) => {
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const checkoutNotice = () => setNotice({
+    title: 'Checkout is a preview',
+    body: 'Your cart is saved in this browser, but payments and order placement are not connected.',
+  });
+
   return (
     <>
-      <LoadingScreen />
-      <Header onNotice={setNotice} cartCount={cartCount} searchQuery={searchQuery} onSearch={setSearchQuery} onOpenCart={() => setCartOpen(true)} />
-      <main>
-        <Hero />
-        <PromoCards onOrder={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })} />
-        <MenuSection searchQuery={searchQuery} onAddToCart={addToCart} />
-        <AppBand />
-        <Stories />
-        <Newsletter />
-      </main>
+      <Header
+        cartCount={cartCount}
+        searchQuery={searchQuery}
+        onSearch={handleSearch}
+        onOpenCart={() => setCartOpen(true)}
+        onNotice={setNotice}
+      />
+      <Switch>
+        <Route path="/">
+          <HomePage />
+        </Route>
+        <Route path="/menu">
+          <MenuPage
+            searchQuery={searchQuery}
+            lines={lines}
+            total={cartTotal}
+            onAdd={beginAdd}
+            onOpenCart={() => setCartOpen(true)}
+            onRemove={removeItem}
+            onIncrease={increaseItem}
+            onCheckout={checkoutNotice}
+          />
+        </Route>
+        <Route component={NotFoundPage} />
+      </Switch>
       <Footer onNotice={setNotice} />
-      {cartOpen && <CartDrawer cart={cart} onClose={() => setCartOpen(false)} />}
-      <NoticeDialog notice={notice} onClose={closeNotice} />
+      <OrderNow />
+      <CartOverlay
+        open={cartOpen}
+        lines={lines}
+        total={cartTotal}
+        onClose={() => setCartOpen(false)}
+        onRemove={removeItem}
+        onIncrease={increaseItem}
+        onCheckout={checkoutNotice}
+      />
+      <AddLoading item={loadingItem} />
+      <VariationModal
+        item={modalItem}
+        selected={selectedVariation}
+        onSelect={() => setSelectedVariation(true)}
+        onClose={() => { setModalItem(null); setSelectedVariation(false); }}
+        onAdd={addSelectedItem}
+      />
+      <NoticeDialog notice={notice} onClose={() => setNotice(null)} />
     </>
   );
 }
 
-function Router() {
-  return <RoutedErrorBoundary><Switch><Route path="/" component={Home} /><Route component={NotFound} /></Switch></RoutedErrorBoundary>;
-}
-
-function RoutedErrorBoundary({ children }: { children: ReactNode }) {
-  const [location] = useLocation();
-  return <ErrorBoundary resetKey={location}>{children}</ErrorBoundary>;
-}
-
 function App() {
-  return <QueryClientProvider client={queryClient}><TooltipProvider><WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}><Router /></WouterRouter><Toaster /></TooltipProvider></QueryClientProvider>;
+  return (
+    <ErrorBoundary>
+      <TooltipProvider>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+          <AppShell />
+        </WouterRouter>
+        <Toaster />
+      </TooltipProvider>
+    </ErrorBoundary>
+  );
 }
 
 export default App;
