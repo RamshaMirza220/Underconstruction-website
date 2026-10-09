@@ -27,18 +27,6 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { useForm } from 'react-hook-form';
 import { homeMenuCategories, menuCategories, menuItems, type MenuCategory, type MenuItem } from './data/menu';
 
-const OFFICIAL_MEDIA = {
-  logo: 'https://cheezious.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FmainLogo.c4a33b22.png&w=1200&q=75',
-  promoDelivery: 'https://cheezious.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fe1.1d85fdc1.webp&w=750&q=75',
-  promoAward: 'https://cheezious.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fe22.91d447bb.webp&w=750&q=75',
-  promoLocal: 'https://cheezious.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fe3.b5726675.webp&w=750&q=75',
-  appBanner: 'https://cheezious.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fmobileapp.136ee6c2.png&w=3840&q=75',
-  appPreview: 'https://cheezious.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fmobile.b53e6af2.png&w=1920&q=75',
-  googlePlay: 'https://cheezious.com/_next/static/media/google.9b9b10ed.svg',
-  appStore: 'https://cheezious.com/_next/static/media/apple.50cebbed.svg',
-  footerLogo: 'https://cheezious.com/_next/static/media/footerlogo.19a797d2.svg',
-};
-
 type CartLine = { item: MenuItem; quantity: number };
 type Notice = { title: string; body: string } | null;
 type NewsletterValues = { email: string };
@@ -63,8 +51,9 @@ function readCartFromStorage(): Record<string, number> {
 
 function Brand() {
   return (
-    <Link className="cx-brand" href="/" aria-label="Cheezious home" data-testid="link-cheezious-home">
-      <img src={OFFICIAL_MEDIA.logo} alt="Cheezious" />
+    <Link className="cx-brand" href="/" aria-label="Underconstruction home" data-testid="link-underconstruction-home">
+      <span className="cx-brand-mark" aria-hidden="true">U</span>
+      <span className="cx-brand-name">Underconstruction</span>
     </Link>
   );
 }
@@ -118,8 +107,8 @@ function Header({
         type="search"
         value={searchQuery}
         onChange={(event) => onSearch(event.target.value)}
-        placeholder="Find in cheezious"
-        aria-label="Find in Cheezious menu"
+        placeholder="Find in Underconstruction"
+        aria-label="Find in Underconstruction menu"
         data-testid={`input-menu-search-${id}`}
       />
     </label>
@@ -183,7 +172,7 @@ function Header({
           <button
             className="cx-header-action"
             type="button"
-            onClick={() => onNotice({ title: 'Welcome to Cheezious', body: 'Account sign-in is not connected in this front-end preview.' })}
+            onClick={() => onNotice({ title: 'Welcome to Underconstruction', body: 'Account sign-in is not connected in this front-end preview.' })}
             data-testid="button-header-login"
           >
             <UserRound size={16} /> <span>LOGIN</span>
@@ -197,9 +186,9 @@ function Header({
       </div>
       {drawerOpen && (
         <div className="cx-drawer-backdrop" onClick={() => setDrawerOpen(false)}>
-          <nav className="cx-drawer" aria-label="Cheezious navigation" onClick={(event) => event.stopPropagation()}>
+          <nav className="cx-drawer" aria-label="Underconstruction navigation" onClick={(event) => event.stopPropagation()}>
             <div className="cx-drawer-heading">
-              <strong>Explore Cheezious</strong>
+              <strong>Explore Underconstruction</strong>
               <button type="button" aria-label="Close menu" onClick={() => setDrawerOpen(false)} data-testid="button-close-navigation"><X size={19} /></button>
             </div>
             {navLinks}
@@ -214,7 +203,7 @@ function Hero() {
   return (
     <section className="cx-hero" aria-label="Now open in G-15, Islamabad">
       <div className="cx-hero-pattern" aria-hidden="true" />
-      <div className="cx-hero-food"><img src="/food-pizza.jpg" alt="Cheezious loaded pizza" /></div>
+      <div className="cx-hero-food"><img src="/food-pizza.jpg" alt="Loaded pizza" /></div>
       <div className="cx-hero-copy">
         <h1><span>NOW OPEN</span><strong>G-15, ISLAMABAD</strong></h1>
       </div>
@@ -260,13 +249,13 @@ function HomeMenuCarousel() {
 
 function PromoCards() {
   const promos = [
-    { image: OFFICIAL_MEDIA.promoDelivery, alt: 'Cheezious delivery', caption: 'Delivering cheezy khushiyan' },
-    { image: OFFICIAL_MEDIA.promoAward, alt: 'Cheezious brand recognition', caption: 'Fastest Growing Brand of the Year' },
-    { image: OFFICIAL_MEDIA.promoLocal, alt: 'Local ingredients and flavors', caption: 'Made with fresh, local ingredients and love' },
+    { image: '/food-pizza.jpg', alt: 'Freshly made pizza', caption: 'Freshly made and delivered with care' },
+    { image: '/food-burger.jpg', alt: 'Burger made for sharing', caption: 'Made for sharing with your favorite people' },
+    { image: '/food-wings.jpg', alt: 'Freshly prepared wings', caption: 'Fresh ingredients and plenty of flavor' },
   ];
 
   return (
-    <section className="cx-promo-grid cx-site-width" aria-label="About Cheezious">
+    <section className="cx-promo-grid cx-site-width" aria-label="About Underconstruction">
       {promos.map((promo) => (
         <article className="cx-promo-card" key={promo.caption}>
           <img src={promo.image} alt={promo.alt} loading="lazy" />
@@ -281,15 +270,22 @@ function AppBand() {
   return (
     <section className="cx-app-section cx-site-width" id="app">
       <div className="cx-app-panel">
-        <img className="cx-app-background" src={OFFICIAL_MEDIA.appBanner} alt="" loading="lazy" />
-        <div className="cx-app-phone"><img src={OFFICIAL_MEDIA.appPreview} alt="Cheezious mobile app preview" loading="lazy" /></div>
+        <div className="cx-app-background" aria-hidden="true" />
+        <div className="cx-app-phone">
+          <div className="cx-phone-mock" aria-label="Underconstruction mobile app preview">
+            <div className="cx-phone-brand"><span>U</span><strong>Underconstruction</strong></div>
+            <img className="cx-phone-feature-image" src="/food-pizza.jpg" alt="Pizza featured in the Underconstruction app preview" loading="lazy" />
+            <div className="cx-phone-caption"><strong>Freshly made</strong><span>Explore today's menu</span></div>
+            <div className="cx-phone-menu-pills"><span>Pizza</span><span>Burgers</span><span>Sides</span></div>
+          </div>
+        </div>
         <div className="cx-app-copy">
-          <span className="cx-eyebrow">Cheezious, wherever you are</span>
+          <span className="cx-eyebrow">Underconstruction, wherever you are</span>
           <h2>Download Our<br />Mobile App</h2>
           <p>Elevate your experience by downloading our mobile app for seamless ordering experience.</p>
           <div className="cx-store-links">
-            <a href="#app" aria-label="Google Play app listing"><img src={OFFICIAL_MEDIA.googlePlay} alt="Google Play" /></a>
-            <a href="#app" aria-label="Apple App Store listing"><img src={OFFICIAL_MEDIA.appStore} alt="App Store" /></a>
+            <a href="#app" aria-label="Google Play app listing"><span aria-hidden="true">▶</span><span>Google Play</span></a>
+            <a href="#app" aria-label="Apple App Store listing"><span aria-hidden="true">A</span><span>App Store</span></a>
           </div>
         </div>
         <span className="cx-app-sticker" aria-hidden="true"><Pizza size={37} /></span>
@@ -300,7 +296,7 @@ function AppBand() {
 
 function Stories() {
   const stories = [
-    { title: 'A little extra cheese makes every moment better', photo: '/food-pizza.jpg', date: 'CHEEZIOUS STORIES' },
+    { title: 'A little extra cheese makes every moment better', photo: '/food-pizza.jpg', date: 'UNDERCONSTRUCTION STORIES' },
     { title: 'Fresh flavors, made for sharing', photo: '/food-burger.jpg', date: 'FROM OUR KITCHEN' },
     { title: 'Find your next favorite bite', photo: '/food-wings.jpg', date: 'MENU SPOTLIGHT' },
   ];
@@ -493,7 +489,7 @@ function CartPanel({
   return (
     <aside className={`cx-cart-panel${overlay ? ' is-overlay-panel' : ''}`} role={overlay ? 'dialog' : 'complementary'} aria-modal={overlay || undefined} aria-labelledby="cx-cart-title">
       <div className="cx-cart-heading">
-        <div><span>Your Cheezious order</span><h2 id="cx-cart-title">Your Cart <small>({itemCount})</small></h2></div>
+        <div><span>Your Underconstruction order</span><h2 id="cx-cart-title">Your Cart <small>({itemCount})</small></h2></div>
         {onClose && <button className="cx-cart-close" type="button" aria-label="Close cart" onClick={onClose} data-testid="button-close-cart"><X size={19} /></button>}
       </div>
       {lines.length > 0 ? (
@@ -628,7 +624,7 @@ function MenuPage({
                   key={category.id}
                 >
                   <div className="cx-menu-category-heading">
-                    <div><span className="cx-eyebrow">Cheezious menu</span><h2>{category.name}</h2></div>
+                    <div><span className="cx-eyebrow">Underconstruction menu</span><h2>{category.name}</h2></div>
                     <span>{categoryItems.length} items</span>
                   </div>
                   <div className="cx-products-grid">
@@ -659,12 +655,12 @@ function MenuPage({
 function Footer({ onNotice }: { onNotice: (notice: Notice) => void }) {
   return (
     <footer className="cx-footer">
-      <img src={OFFICIAL_MEDIA.footerLogo} alt="Cheezious" />
-      <p>Cheezious Copyright © 2026. All Rights Reserved.</p>
+      <div className="cx-footer-brand"><span aria-hidden="true">U</span><strong>Underconstruction</strong></div>
+      <p>Underconstruction Copyright © 2026. All Rights Reserved.</p>
       <div>
-        <button type="button" onClick={() => onNotice({ title: 'Terms & Conditions', body: 'This preview does not connect to the Cheezious terms service.' })} data-testid="button-terms">TERMS &amp; CONDITIONS</button>
+        <button type="button" onClick={() => onNotice({ title: 'Terms & Conditions', body: 'This preview does not connect to the Underconstruction terms service.' })} data-testid="button-terms">TERMS &amp; CONDITIONS</button>
         <span>|</span>
-        <button type="button" onClick={() => onNotice({ title: 'Privacy Policy', body: 'This preview does not connect to the Cheezious privacy service.' })} data-testid="button-privacy">PRIVACY POLICY</button>
+        <button type="button" onClick={() => onNotice({ title: 'Privacy Policy', body: 'This preview does not connect to the Underconstruction privacy service.' })} data-testid="button-privacy">PRIVACY POLICY</button>
       </div>
     </footer>
   );
@@ -783,7 +779,7 @@ function NoticeDialog({ notice, onClose }: { notice: Notice; onClose: () => void
     <div className="cx-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="cx-notice-modal" role="dialog" aria-modal="true" aria-labelledby="cx-notice-title">
         <button type="button" className="cx-modal-close" aria-label="Close message" onClick={onClose} data-testid="button-close-notice"><X size={20} /></button>
-        <span className="cx-eyebrow">Cheezious</span>
+        <span className="cx-eyebrow">Underconstruction</span>
         <h2 id="cx-notice-title">{notice.title}</h2>
         <p>{notice.body}</p>
         <button className="cx-notice-ok" type="button" onClick={onClose} data-testid="button-notice-ok">GOT IT</button>
@@ -839,12 +835,12 @@ function AppShell() {
 
   useEffect(() => {
     const isMenu = location.split('?')[0] === '/menu';
-    document.title = isMenu ? 'Menu | Cheezious' : 'Cheezious | Khushiyan Served Hot';
+    document.title = isMenu ? 'Menu | Underconstruction' : 'Underconstruction | Fresh Food, Made to Share';
     const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
     if (description) {
       description.content = isMenu
-        ? 'Browse the Cheezious menu: pizzas, burgers, pasta, starters, sides and more.'
-        : 'Explore Cheezious pizzas, burgers, sides, special offers, and stories made for sharing.';
+        ? 'Browse the Underconstruction menu: pizzas, burgers, pasta, starters, sides and more.'
+        : 'Explore Underconstruction pizzas, burgers, sides, special offers, and stories made for sharing.';
     }
   }, [location]);
 
