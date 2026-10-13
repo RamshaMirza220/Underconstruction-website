@@ -26,10 +26,20 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useForm } from 'react-hook-form';
 import { homeMenuCategories, menuCategories, menuItems, type MenuCategory, type MenuItem } from './data/menu';
+import { AuthProvider, useAuth } from '@/auth/AuthContext';
+import { AuthToast, type AuthToastTone } from '@/components/auth/AuthToast';
+import { SavedAddressesModal } from '@/components/auth/SavedAddressesModal';
+import { SignInModal } from '@/components/auth/SignInModal';
+import { UnderconstructionBrand } from '@/components/UnderconstructionBrand';
+import { LoginPage } from '@/pages/Login';
+import '@/components/auth/auth.css';
 
 type CartLine = { item: MenuItem; quantity: number };
 type Notice = { title: string; body: string } | null;
 type NewsletterValues = { email: string };
+
+// Change the brand name here and it updates everywhere.
+const BRAND_NAME = 'Underconstruction';
 
 const STORAGE_KEY = 'cheezious-preview-cart-v2';
 const formatPrice = (price: number) => `Rs. ${price.toLocaleString('en-US')}`;
@@ -51,9 +61,8 @@ function readCartFromStorage(): Record<string, number> {
 
 function Brand() {
   return (
-    <Link className="cx-brand" href="/" aria-label="Underconstruction home" data-testid="link-underconstruction-home">
-      <span className="cx-brand-mark" aria-hidden="true">U</span>
-      <span className="cx-brand-name">Underconstruction</span>
+    <Link className="cx-brand" href="/" aria-label={`${BRAND_NAME} home`} data-testid="link-underconstruction-home">
+      <UnderconstructionBrand />
     </Link>
   );
 }
@@ -63,17 +72,28 @@ function Header({
   searchQuery,
   onSearch,
   onOpenCart,
-  onNotice,
+  userPhone,
+  selectedAddress,
+  mode,
+  onModeChange,
+  onAddressClick,
+  onLogin,
+  onLogout,
 }: {
   cartCount: number;
   searchQuery: string;
   onSearch: (value: string) => void;
   onOpenCart: () => void;
-  onNotice: (notice: Notice) => void;
+  userPhone: string | null;
+  selectedAddress: string | null;
+  mode: 'delivery' | 'pickup';
+  onModeChange: (mode: 'delivery' | 'pickup') => void;
+  onAddressClick: () => void;
+  onLogin: () => void;
+  onLogout: () => void;
 }) {
-  const [mode, setMode] = useState<'delivery' | 'pickup'>('delivery');
-  const [address, setAddress] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [, setLocation] = useLocation();
 
   const orderMode = (
@@ -82,7 +102,7 @@ function Header({
         type="button"
         className={mode === 'delivery' ? 'is-selected' : ''}
         aria-pressed={mode === 'delivery'}
-        onClick={() => setMode('delivery')}
+        onClick={() => onModeChange('delivery')}
         data-testid="button-delivery"
       >
         <MapPin size={15} /> DELIVERY
@@ -91,7 +111,7 @@ function Header({
         type="button"
         className={mode === 'pickup' ? 'is-selected' : ''}
         aria-pressed={mode === 'pickup'}
-        onClick={() => setMode('pickup')}
+        onClick={() => onModeChange('pickup')}
         data-testid="button-pickup"
       >
         <Store size={15} /> PICK-UP
@@ -108,24 +128,18 @@ function Header({
         value={searchQuery}
         onChange={(event) => onSearch(event.target.value)}
         placeholder="Find in Underconstruction"
-        aria-label="Find in Underconstruction menu"
+        aria-label="Find in Underconstruction"
         data-testid={`input-menu-search-${id}`}
       />
     </label>
   );
 
   const addressField = mode === 'delivery' ? (
-    <label className="cx-address-field">
+    <button className="cx-address-field" type="button" onClick={onAddressClick} data-testid="button-header-address">
       <MapPin size={15} aria-hidden="true" />
-      <input
-        value={address}
-        onChange={(event) => setAddress(event.target.value)}
-        placeholder="Enter the Delivery Address"
-        aria-label="Delivery address"
-        data-testid="input-delivery-address"
-      />
+      <span>{selectedAddress || 'Enter the Delivery Address'}</span>
       <ChevronRight size={16} aria-hidden="true" />
-    </label>
+    </button>
   ) : null;
 
   const navLinks = (
@@ -169,14 +183,33 @@ function Header({
           >
             <ShoppingCart size={17} /> <span>CART</span><b className="cx-cart-badge">{cartCount}</b>
           </button>
-          <button
-            className="cx-header-action"
-            type="button"
-            onClick={() => onNotice({ title: 'Welcome to Underconstruction', body: 'Account sign-in is not connected in this front-end preview.' })}
-            data-testid="button-header-login"
-          >
-            <UserRound size={16} /> <span>LOGIN</span>
-          </button>
+          {userPhone ? (
+            <div className="cx-profile-wrap">
+              <button
+                className="cx-header-action cx-profile-action"
+                type="button"
+                aria-expanded={profileMenuOpen}
+                onClick={() => setProfileMenuOpen((open) => !open)}
+                data-testid="button-header-profile"
+              >
+                <UserRound size={16} /> <span>+92 {userPhone}</span>
+              </button>
+              {profileMenuOpen && (
+                <div className="cx-profile-menu">
+                  <button type="button" onClick={() => { setProfileMenuOpen(false); onLogout(); }} data-testid="button-logout">Log out</button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              className="cx-header-action"
+              type="button"
+              onClick={onLogin}
+              data-testid="button-header-login"
+            >
+              <UserRound size={16} /> <span>LOGIN</span>
+            </button>
+          )}
         </div>
       </div>
       <div className="cx-mobile-controls">
@@ -186,9 +219,9 @@ function Header({
       </div>
       {drawerOpen && (
         <div className="cx-drawer-backdrop" onClick={() => setDrawerOpen(false)}>
-          <nav className="cx-drawer" aria-label="Underconstruction navigation" onClick={(event) => event.stopPropagation()}>
+          <nav className="cx-drawer" aria-label={`${BRAND_NAME} navigation`} onClick={(event) => event.stopPropagation()}>
             <div className="cx-drawer-heading">
-              <strong>Explore Underconstruction</strong>
+              <strong>Explore {BRAND_NAME}</strong>
               <button type="button" aria-label="Close menu" onClick={() => setDrawerOpen(false)} data-testid="button-close-navigation"><X size={19} /></button>
             </div>
             {navLinks}
@@ -255,7 +288,7 @@ function PromoCards() {
   ];
 
   return (
-    <section className="cx-promo-grid cx-site-width" aria-label="About Underconstruction">
+    <section className="cx-promo-grid cx-site-width" aria-label={`About ${BRAND_NAME}`}>
       {promos.map((promo) => (
         <article className="cx-promo-card" key={promo.caption}>
           <img src={promo.image} alt={promo.alt} loading="lazy" />
@@ -272,15 +305,15 @@ function AppBand() {
       <div className="cx-app-panel">
         <div className="cx-app-background" aria-hidden="true" />
         <div className="cx-app-phone">
-          <div className="cx-phone-mock" aria-label="Underconstruction mobile app preview">
-            <div className="cx-phone-brand"><span>U</span><strong>Underconstruction</strong></div>
-            <img className="cx-phone-feature-image" src="/food-pizza.jpg" alt="Pizza featured in the Underconstruction app preview" loading="lazy" />
+          <div className="cx-phone-mock" aria-label={`${BRAND_NAME} mobile app preview`}>
+            <div className="cx-phone-brand"><UnderconstructionBrand /></div>
+            <img className="cx-phone-feature-image" src="/food-pizza.jpg" alt={`Pizza featured in the ${BRAND_NAME} app preview`} loading="lazy" />
             <div className="cx-phone-caption"><strong>Freshly made</strong><span>Explore today's menu</span></div>
             <div className="cx-phone-menu-pills"><span>Pizza</span><span>Burgers</span><span>Sides</span></div>
           </div>
         </div>
         <div className="cx-app-copy">
-          <span className="cx-eyebrow">Underconstruction, wherever you are</span>
+          <span className="cx-eyebrow">{BRAND_NAME}, wherever you are</span>
           <h2>Download Our<br />Mobile App</h2>
           <p>Elevate your experience by downloading our mobile app for seamless ordering experience.</p>
           <div className="cx-store-links">
@@ -296,7 +329,7 @@ function AppBand() {
 
 function Stories() {
   const stories = [
-    { title: 'A little extra cheese makes every moment better', photo: '/food-pizza.jpg', date: 'UNDERCONSTRUCTION STORIES' },
+    { title: 'A little extra cheese makes every moment better', photo: '/food-pizza.jpg', date: `${BRAND_NAME.toUpperCase()} STORIES` },
     { title: 'Fresh flavors, made for sharing', photo: '/food-burger.jpg', date: 'FROM OUR KITCHEN' },
     { title: 'Find your next favorite bite', photo: '/food-wings.jpg', date: 'MENU SPOTLIGHT' },
   ];
@@ -489,7 +522,7 @@ function CartPanel({
   return (
     <aside className={`cx-cart-panel${overlay ? ' is-overlay-panel' : ''}`} role={overlay ? 'dialog' : 'complementary'} aria-modal={overlay || undefined} aria-labelledby="cx-cart-title">
       <div className="cx-cart-heading">
-        <div><span>Your Underconstruction order</span><h2 id="cx-cart-title">Your Cart <small>({itemCount})</small></h2></div>
+        <div><span>Your {BRAND_NAME} order</span><h2 id="cx-cart-title">Your Cart <small>({itemCount})</small></h2></div>
         {onClose && <button className="cx-cart-close" type="button" aria-label="Close cart" onClick={onClose} data-testid="button-close-cart"><X size={19} /></button>}
       </div>
       {lines.length > 0 ? (
@@ -624,7 +657,7 @@ function MenuPage({
                   key={category.id}
                 >
                   <div className="cx-menu-category-heading">
-                    <div><span className="cx-eyebrow">Underconstruction menu</span><h2>{category.name}</h2></div>
+                    <div><span className="cx-eyebrow">{BRAND_NAME} menu</span><h2>{category.name}</h2></div>
                     <span>{categoryItems.length} items</span>
                   </div>
                   <div className="cx-products-grid">
@@ -655,12 +688,12 @@ function MenuPage({
 function Footer({ onNotice }: { onNotice: (notice: Notice) => void }) {
   return (
     <footer className="cx-footer">
-      <div className="cx-footer-brand"><span aria-hidden="true">U</span><strong>Underconstruction</strong></div>
-      <p>Underconstruction Copyright © 2026. All Rights Reserved.</p>
+      <div className="cx-footer-brand"><UnderconstructionBrand /></div>
+      <p>{BRAND_NAME} Copyright © 2026. All Rights Reserved.</p>
       <div>
-        <button type="button" onClick={() => onNotice({ title: 'Terms & Conditions', body: 'This preview does not connect to the Underconstruction terms service.' })} data-testid="button-terms">TERMS &amp; CONDITIONS</button>
+        <button type="button" onClick={() => onNotice({ title: 'Terms & Conditions', body: `This preview does not connect to the ${BRAND_NAME} terms service.` })} data-testid="button-terms">TERMS &amp; CONDITIONS</button>
         <span>|</span>
-        <button type="button" onClick={() => onNotice({ title: 'Privacy Policy', body: 'This preview does not connect to the Underconstruction privacy service.' })} data-testid="button-privacy">PRIVACY POLICY</button>
+        <button type="button" onClick={() => onNotice({ title: 'Privacy Policy', body: `This preview does not connect to the ${BRAND_NAME} privacy service.` })} data-testid="button-privacy">PRIVACY POLICY</button>
       </div>
     </footer>
   );
@@ -779,7 +812,7 @@ function NoticeDialog({ notice, onClose }: { notice: Notice; onClose: () => void
     <div className="cx-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="cx-notice-modal" role="dialog" aria-modal="true" aria-labelledby="cx-notice-title">
         <button type="button" className="cx-modal-close" aria-label="Close message" onClick={onClose} data-testid="button-close-notice"><X size={20} /></button>
-        <span className="cx-eyebrow">Underconstruction</span>
+        <span className="cx-eyebrow">{BRAND_NAME}</span>
         <h2 id="cx-notice-title">{notice.title}</h2>
         <p>{notice.body}</p>
         <button className="cx-notice-ok" type="button" onClick={onClose} data-testid="button-notice-ok">GOT IT</button>
@@ -801,13 +834,21 @@ function NotFoundPage() {
 
 function AppShell() {
   const [location, setLocation] = useLocation();
+  const { userPhone, selectedAddress, logOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<Record<string, number>>(readCartFromStorage);
+  const [mode, setMode] = useState<'delivery' | 'pickup'>('delivery');
   const [cartOpen, setCartOpen] = useState(false);
   const [loadingItem, setLoadingItem] = useState<MenuItem | null>(null);
   const [modalItem, setModalItem] = useState<MenuItem | null>(null);
   const [selectedVariation, setSelectedVariation] = useState(false);
   const [notice, setNotice] = useState<Notice>(null);
+  const [signInOpen, setSignInOpen] = useState(false);
+  const [addressesOpen, setAddressesOpen] = useState(false);
+  const [returnHomeAfterAuth, setReturnHomeAfterAuth] = useState(false);
+  const [addressFlowActive, setAddressFlowActive] = useState(false);
+  const [pendingItem, setPendingItem] = useState<MenuItem | null>(null);
+  const [authToast, setAuthToast] = useState<{ message: string; tone: AuthToastTone } | null>(null);
   const addTimer = useRef<number | null>(null);
 
   const lines = useMemo(
@@ -825,22 +866,26 @@ function AppShell() {
   }, [cart]);
 
   useEffect(() => {
-    document.body.style.overflow = cartOpen || Boolean(modalItem) || Boolean(loadingItem) || Boolean(notice) ? 'hidden' : '';
+    document.body.style.overflow = cartOpen || Boolean(modalItem) || Boolean(loadingItem) || Boolean(notice) || signInOpen || addressesOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
-  }, [cartOpen, modalItem, loadingItem, notice]);
+  }, [cartOpen, modalItem, loadingItem, notice, signInOpen, addressesOpen]);
 
   useEffect(() => () => {
     if (addTimer.current !== null) window.clearTimeout(addTimer.current);
   }, []);
 
   useEffect(() => {
-    const isMenu = location.split('?')[0] === '/menu';
-    document.title = isMenu ? 'Menu | Underconstruction' : 'Underconstruction | Fresh Food, Made to Share';
+    const route = location.split('?')[0];
+    const isMenu = route === '/menu';
+    const isLogin = route === '/login';
+    document.title = isMenu ? `Menu | ${BRAND_NAME}` : isLogin ? `Login | ${BRAND_NAME}` : `${BRAND_NAME} | Fresh Food, Made to Share`;
     const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
     if (description) {
       description.content = isMenu
-        ? 'Browse the Underconstruction menu: pizzas, burgers, pasta, starters, sides and more.'
-        : 'Explore Underconstruction pizzas, burgers, sides, special offers, and stories made for sharing.';
+        ? `Browse the ${BRAND_NAME} menu: pizzas, burgers, pasta, starters, sides and more.`
+        : isLogin
+          ? `Sign in to Underconstruction with your phone number or continue as a guest.`
+        : `Explore ${BRAND_NAME} pizzas, burgers, sides, special offers, and stories made for sharing.`;
     }
   }, [location]);
 
@@ -859,6 +904,77 @@ function AppShell() {
       addTimer.current = null;
     }, 600);
   };
+
+  const showAuthToast = (message: string, tone: AuthToastTone) => setAuthToast({ message, tone });
+
+  const completeAuthFlow = () => {
+    const nextItem = pendingItem;
+    setSignInOpen(false);
+    setAddressesOpen(false);
+    setAddressFlowActive(false);
+    setPendingItem(null);
+    if (returnHomeAfterAuth) setLocation('/');
+    setReturnHomeAfterAuth(false);
+    if (nextItem) beginAdd(nextItem);
+  };
+
+  const requestAdd = (item: MenuItem) => {
+    if (userPhone) {
+      beginAdd(item);
+      return;
+    }
+    setPendingItem(item);
+    setReturnHomeAfterAuth(false);
+    setAddressFlowActive(false);
+    setSignInOpen(true);
+    showAuthToast('Please login to purchase', 'error');
+  };
+
+  const closeSignIn = () => {
+    setSignInOpen(false);
+    setPendingItem(null);
+    setAddressFlowActive(false);
+    setReturnHomeAfterAuth(false);
+  };
+
+  const requestAddress = () => {
+    setAddressesOpen(true);
+    setAddressFlowActive(true);
+    setSignInOpen(false);
+  };
+
+  const closeAddresses = () => {
+    setAddressesOpen(false);
+    if (addressFlowActive) {
+      setPendingItem(null);
+      setAddressFlowActive(false);
+      setReturnHomeAfterAuth(false);
+    }
+  };
+
+  const selectAddress = () => {
+    setAddressesOpen(false);
+    if (addressFlowActive) completeAuthFlow();
+  };
+
+  const openHeaderAddress = () => {
+    if (userPhone) {
+      setAddressFlowActive(false);
+      setAddressesOpen(true);
+    } else {
+      setPendingItem(null);
+      setReturnHomeAfterAuth(false);
+      setSignInOpen(true);
+    }
+  };
+
+  const startLoginPageFlow = () => {
+    setPendingItem(null);
+    setReturnHomeAfterAuth(true);
+    setSignInOpen(true);
+  };
+
+  const continueAsGuest = () => setLocation('/');
 
   const addSelectedItem = () => {
     if (!modalItem || !selectedVariation) return;
@@ -886,23 +1002,34 @@ function AppShell() {
 
   return (
     <>
-      <Header
-        cartCount={cartCount}
-        searchQuery={searchQuery}
-        onSearch={handleSearch}
-        onOpenCart={() => setCartOpen(true)}
-        onNotice={setNotice}
-      />
+      {location.split('?')[0] !== '/login' && (
+        <Header
+          cartCount={cartCount}
+          searchQuery={searchQuery}
+          onSearch={handleSearch}
+          onOpenCart={() => setCartOpen(true)}
+          userPhone={userPhone}
+          selectedAddress={selectedAddress}
+          mode={mode}
+          onModeChange={setMode}
+          onAddressClick={openHeaderAddress}
+          onLogin={() => setLocation('/login')}
+          onLogout={logOut}
+        />
+      )}
       <Switch>
         <Route path="/">
           <HomePage />
+        </Route>
+        <Route path="/login">
+          <LoginPage onContinueWithPhone={startLoginPageFlow} onContinueAsGuest={continueAsGuest} />
         </Route>
         <Route path="/menu">
           <MenuPage
             searchQuery={searchQuery}
             lines={lines}
             total={cartTotal}
-            onAdd={beginAdd}
+            onAdd={requestAdd}
             onOpenCart={() => setCartOpen(true)}
             onRemove={removeItem}
             onIncrease={increaseItem}
@@ -911,8 +1038,8 @@ function AppShell() {
         </Route>
         <Route component={NotFoundPage} />
       </Switch>
-      <Footer onNotice={setNotice} />
-      <OrderNow />
+      {location.split('?')[0] !== '/login' && <Footer onNotice={setNotice} />}
+      {location.split('?')[0] !== '/login' && <OrderNow />}
       <CartOverlay
         open={cartOpen}
         lines={lines}
@@ -931,6 +1058,16 @@ function AppShell() {
         onAdd={addSelectedItem}
       />
       <NoticeDialog notice={notice} onClose={() => setNotice(null)} />
+      <SignInModal
+        open={signInOpen}
+        mode={mode}
+        onClose={closeSignIn}
+        onNeedAddress={requestAddress}
+        onComplete={completeAuthFlow}
+        onToast={showAuthToast}
+      />
+      <SavedAddressesModal open={addressesOpen} onClose={closeAddresses} onSelect={selectAddress} />
+      {authToast && <AuthToast message={authToast.message} tone={authToast.tone} onDismiss={() => setAuthToast(null)} />}
     </>
   );
 }
@@ -939,9 +1076,11 @@ function App() {
   return (
     <ErrorBoundary>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-          <AppShell />
-        </WouterRouter>
+        <AuthProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+            <AppShell />
+          </WouterRouter>
+        </AuthProvider>
         <Toaster />
       </TooltipProvider>
     </ErrorBoundary>

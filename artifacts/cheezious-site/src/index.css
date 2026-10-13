@@ -354,7 +354,7 @@ a { color: inherit; text-decoration: none; }
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 
-/* Screenshot-matched Cheezious home page */
+/* Screenshot-matched Underconstruction home page */
 main { background: #fff; }
 .site-width { width: min(1120px, calc(100% - 48px)); margin-inline: auto; }
 .cheez-header { position: relative; z-index: 10; background: #fff; border-bottom: 1px solid #efefef; }
@@ -691,7 +691,7 @@ main { background: #fff; }
   .promo-art-award .promo-art-icon svg { width: 74px; height: 74px; }
 }
 
-/* Cheezious home and full menu */
+/* Underconstruction home and full menu */
 :root {
   --cx-yellow: #FFDD00;
   --cx-orange: #F15A22;
@@ -1140,3 +1140,70 @@ body { background: #fff; color: var(--cx-ink); font-family: 'Montserrat', sans-s
   .cx-header-actions .cx-header-action:last-child { min-width: 44px; }
   .cx-category-tabs-wrap { top: 162px; }
 }
+
+.cx-brand {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.cx-brand-wrap {
+  flex-shrink: 0;
+}
+.cx-brand-mark {
+  display: none;
+}
+.cx-brand-name {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+}
+.cx-brand-under {
+  color: #3b1f0e;
+}
+.cx-brand-construction {
+  color: #f15a22;
+}
+.cx-desktop-controls {
+  min-width: 0;
+}
+
+/* Smaller wordmark on phones, in the phone mockup, and in the footer */
+@media (max-width: 640px) {
+  .cx-brand-name {
+    font-size: 18px;
+  }
+}
+.cx-phone-brand .cx-brand-name {
+  font-size: 14px;
+}
+.cx-footer-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cx-footer-brand .cx-brand-name {
+  font-size: 20px;
+}
+
+
+.cx-hero h1,
+.cx-hero h1 span,
+.cx-hero h1 strong {
+  color: #fff;
+  -webkit-text-stroke: 0;
+  text-shadow:
+    -3px -3px 0 #000,
+    3px -3px 0 #000,
+    -3px 3px 0 #000,
+    3px 3px 0 #000,
+    6px 6px 0 #000;
+}
+

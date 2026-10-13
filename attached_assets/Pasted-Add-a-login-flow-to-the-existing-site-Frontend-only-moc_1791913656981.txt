@@ -1,0 +1,25 @@
+Add a login flow to the existing site. Frontend only: mock OTP, fake captcha, no backend, no real auth. Keep the framework, install nothing new, don’t touch unrelated files. Put new code in new files (auth/AuthContext.tsx, components/auth/*, pages/Login.tsx) and make only small edits to App.tsx. Write the code, run the app once, fix errors, stop. No extra verification screenshots.
+
+Header: put a small yellow rounded icon (lucide Pizza) before the wordmark, with a 10px gap. The name must never be cut off or overlap the DELIVERY pill.
+
+State: an auth context holds user (phone) or none, plus the saved addresses and the selected address. Persist it in localStorage inside try/catch. Keep a pendingItem so the add-to-cart can resume after login.
+
+Add to cart when not logged in:
+
+Clicking “+ ADD TO CART” shows a red toast “Please login to purchase” and opens the Sign-In modal: white rounded modal, red X, logo, bold “Please Sign-In to Place an Order”, grey “Please enter your phone number”, a “+92” box next to the phone input (placeholder 301xxxxxxx), and a full-width yellow SEND OTP button. Validate 10 digits starting with 3.
+After SEND OTP, show a fake reCAPTCHA-style box (“I’m not a robot” checkbox, a small spinner when checked). The button reads “COMPLETE CAPTCHA” and is disabled and muted until it’s checked.
+Then the OTP modal: “Enter One Time Pin”, “We have sent an OTP to your phone number {number}”, six boxes (auto-advance, paste support, backspace goes back), “Didn’t Receive OTP Code? Resend” (disabled until the timer ends), and an orange timer pill counting down from 01:30. Show a green toast “OTP is sent to customer phone number Successfully (demo code 123456)”. A wrong code shows an inline error. 123456 logs the user in.
+Then the Saved Addresses modal: bold title, a yellow square X, grey text “Please allow location for free delivery and good food experience.”, a search input “Enter text to search” with an orange target icon (it fills “Current location”) and a yellow arrow button that adds the typed address, then a “Saved Addresses” heading and a radio list. Seed one: “House 456 — E 7, Islamabad, Islamabad Capital Territory”. Selecting a row closes the modal and shows the address in the header field.
+Then resume pendingItem (the existing loader and variation modal). If PICK-UP is selected, skip step 4.
+
+If already logged in, “+ ADD TO CART” works as it does now. Clicking the header address field opens the Saved Addresses modal when logged in, and the Sign-In modal when not.
+
+LOGIN button → /login page: split screen. Left side: logo, bold “Hey there, feeling hungry?”, grey “Let’s enjoy your food with {BRAND_NAME}!”, a yellow gradient “CONTINUE WITH PHONE” button with a phone icon, and an orange-outlined “CONTINUE AS A GUEST” button. Right side: a yellow panel with the wordmark and a local food image (use a local placeholder, don’t hotlink). Hide the right panel on mobile.
+
+Guest → go to / (guest can browse, but add-to-cart still needs login).
+Continue with phone → the same flow (phone → captcha → OTP → address), then go to /.
+When logged in, the LOGIN button shows the phone number and opens a small menu with “Log out” (the only extra feature).
+
+Style: Montserrat, yellow 
+#FFDD00, orange 
+#F15A22, 16px card radius, 12px button radius. Backdrop dims the page. Esc and X close the modals. Mobile: modals go near full width, the OTP boxes fit a 320px screen, and tap targets are at least 44px.

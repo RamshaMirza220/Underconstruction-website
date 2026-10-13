@@ -73,7 +73,7 @@ const rows: MenuRow[] = [
   ['somewhat-sooper', 'Chicken Pepperoni', 660, true, 'Chicken Pepperoni, Pizza Sauce And Cheese.'],
   ['somewhat-sooper', 'Chicken Mushroom', 660, true, 'Tender Chunks Of Marinated Grilled Chicken Tikka, Lots Of Mushrooms, Onion And Tomatoes.'],
 
-  ['cheezy-treats', 'Cheezious Special', 1480, true, 'Delicious Special Chicken With Black Olives, Sausages And Bell Pepper.'],
+  ['cheezy-treats', 'Underconstruction Special', 1480, true, 'Delicious Special Chicken With Black Olives, Sausages And Bell Pepper.'],
   ['cheezy-treats', 'Behari Kabab', 1480, true, 'Enjoy Special Chicken Behari Kabab, Grilled Chicken With Onion Jalapenos And Ginger.'],
   ['cheezy-treats', 'Chicken Extreme', 1480, true, 'Combination Of 3 Flavors Of Chicken With Onion, Bell Pepper, Green Olives, Mushrooms.'],
 
