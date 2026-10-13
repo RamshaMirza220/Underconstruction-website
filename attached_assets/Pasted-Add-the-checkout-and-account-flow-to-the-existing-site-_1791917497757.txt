@@ -1,0 +1,40 @@
+Add the checkout and account flow to the existing site. Frontend only, no backend, no real payments. Keep the framework, install nothing new, don’t touch unrelated files. Use BRAND_NAME for all branding (never “Cheezious”). Put each page in its own new file and make only small edits to App.tsx. Write the code, run tsc and the app once, fix errors (including any undefined references), then stop. No verification screenshots. Reply with a short change list.
+
+Shared state (extend auth/AuthContext.tsx): keep mode (delivery or pickup), favorites, orders, profile (name, dob), saved addresses and the selected address in the context. Persist to localStorage in try/catch. Move mode out of AppShell and the favorites out of MenuPage into this context. Extract ProductCard to components/ProductCard.tsx so Favourites can reuse it.
+
+1. /basket — “Your Basket”:
+
+Back arrow plus bold title. Under it, a small address line with an orange pin (delivery) or “Pick-up: G-15, Islamabad” (pick-up).
+Left: grey rounded cart item cards (thumbnail, name, grey variation “Regular”, orange price, orange “EDIT” at the top right which goes to /menu?category=<id>, orange round trash, quantity, yellow round “+”).
+Right: “Bill Summary”: Product Price, Discount (- Rs. 0), Tax (15%) (+ Rs. 194), divider, bold Total. Below it, a yellow bar: cart icon in a white circle, “PKR {subtotal}” with “Prices Are Exclusive Of Tax”, and “REVIEW PAYMENT »” → /payment.
+“More Products You May Love”: a horizontal scroll of up to 8 menu items not in the cart (prefer Addons, Side Orders, Soft Drinks) using the same product card, with “+ ADD TO CART” (the existing loader and variation modal flow, so pass onAdd).
+A grey “Explore Menu / Add more items in your cart” card with a chevron → /menu.
+Empty cart: the sad-bag empty state with an “EXPLORE MENU” button.
+
+2. /payment — “Order Confirmation”:
+
+Back arrow plus title. Orange “EDIT” opens the Saved Addresses modal. A grey card shows the selected address (name line plus full line).
+A yellow rounded “Payment Method” panel with white radio rows: Cash on Delivery (15% tax, selected by default), Debit/Credit Card (5% tax), JazzCash (5% tax). Each row shows its own total as “PKR x”. Selecting a row updates the Bill Summary. Card and JazzCash are demo selections only (no real processing, no card form).
+A grey “Apply a voucher” card that expands to an input plus APPLY. Mock codes: WELCOME100 (Rs. 100 off), CHEEZY10 (10% off). Invalid codes show an inline error. The Discount row updates.
+“Delivery Instructions” with the hint “Are there any specific delivery instructions?” and a textarea “Additional notes for your delivery...”.
+Right: Bill Summary plus a yellow bar “RS. {total}” and “CONFIRM ORDER »”.
+Empty cart → redirect to /basket.
+
+3. CONFIRM ORDER: create an order (id like UC-123456, date/time, items snapshot, mode, address, payment method, instructions, subtotal, discount, tax, total), save it to orders, clear the cart, and go to /receipt/:id.
+
+4. /receipt/:id: a centered white receipt card with a green check, “Order Confirmed”, the order number and date/time, the status (static), the estimated time (35–45 min), the delivery address (or pick-up location), the payment method, the item lines (name, qty, price), a bill breakdown (product price, discount, tax, total), and the delivery instructions. Buttons: “BACK TO HOME” (yellow) and “ORDER HISTORY” (outlined). Unknown id → redirect to /.
+
+5. /account — “My Account”: tabs (scrollable on mobile; the active tab has a black underline): EDIT PROFILE, ORDER HISTORY, FAVOURITES, SAVED ADDRESSES, PROMOS. Do not add Saved Cards.
+
+Edit Profile: a large circular avatar with a dark camera badge (picking a file shows a preview for the session only), “Full Name”, “Phone Number” (+92 box plus a read-only logged-in number), “Date of Birthday” (date input with a calendar icon), and a yellow “UPDATE” button, disabled until something changes. It saves and shows a green toast “Profile updated”.
+Order History: order cards (number, date, item summary, total, status “Confirmed”), each opening its receipt. Empty state with an “EXPLORE MENU” button.
+Favourites: the hearted items as product cards (the heart toggles from the menu and from here). Empty state: “No favourites yet”.
+Saved Addresses: the list with radio select, an add-new input (the same style as the existing modal) and a delete button.
+Promos: cards for the two mock vouchers with the code and a COPY button.
+
+Wiring: the cart panel’s CHECKOUT button goes to /basket (not logged in → open the sign-in modal first). The logged-in header profile button opens a small dropdown: “My Account” → /account and “Log out”. Hide the OrderNow button and footer on none of these pages.
+
+Style: Montserrat, yellow 
+#FFDD00, orange 
+#F15A22, grey 
+#F7F7F7, 16px card radius, 12px button radius. Mobile: the Bill Summary stacks below the items and the yellow action bar sticks to the bottom of the screen, with tap targets of at least 44px and no horizontal page scroll.
