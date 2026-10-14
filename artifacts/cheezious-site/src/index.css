@@ -1512,6 +1512,10 @@ body { background: #fff; color: var(--cx-ink); font-family: 'Montserrat', sans-s
   .cx-brand-wrap { min-width: 0 !important; }
 }
 .cx-profile-wrap { position: relative; }
+.cx-profile-action { max-width: 176px; }
+.cx-profile-action .cx-profile-label {
+  display: block; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .cx-profile-menu {
   position: absolute; z-index: 80; top: calc(100% + 8px); right: 0; width: 164px; padding: 6px;
   border: 1px solid #ededed; border-radius: 12px; background: #fff; box-shadow: 0 12px 28px #21170d1c;

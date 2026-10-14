@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Frown,
+  Heart,
   MapPin,
   Megaphone,
   Menu as MenuIcon,
@@ -31,13 +32,6 @@ import { SavedAddressesModal } from '@/components/auth/SavedAddressesModal';
 import { SignInModal } from '@/components/auth/SignInModal';
 import { UnderconstructionBrand } from '@/components/UnderconstructionBrand';
 import { LoginPage } from '@/pages/Login';
-import { ProductCard } from '@/components/ProductCard';
-import { BasketPage } from '@/pages/Basket';
-import { PaymentPage } from '@/pages/Payment';
-import { ReceiptPage } from '@/pages/Receipt';
-import { AccountPage } from '@/pages/Account';
-import type { Order } from '@/auth/AuthContext';
-import '@/components/auth/auth.css';
 
 type CartLine = { item: MenuItem; quantity: number };
 type Notice = { title: string; body: string } | null;
@@ -78,6 +72,7 @@ function Header({
   onSearch,
   onOpenCart,
   userPhone,
+  profileName,
   selectedAddress,
   mode,
   onModeChange,
@@ -90,6 +85,7 @@ function Header({
   onSearch: (value: string) => void;
   onOpenCart: () => void;
   userPhone: string | null;
+  profileName: string;
   selectedAddress: string | null;
   mode: 'delivery' | 'pickup';
   onModeChange: (mode: 'delivery' | 'pickup') => void;
@@ -100,6 +96,7 @@ function Header({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [, setLocation] = useLocation();
+  const profileLabel = profileName.trim().split(/\s+/)[0] || `+92 ${userPhone}`;
 
   const orderMode = (
     <div className="cx-order-mode" aria-label="Choose order type">
@@ -132,8 +129,8 @@ function Header({
         type="search"
         value={searchQuery}
         onChange={(event) => onSearch(event.target.value)}
-        placeholder={`Find in ${BRAND_NAME}`}
-        aria-label={`Find in ${BRAND_NAME}`}
+        placeholder="Search the menu"
+        aria-label="Search the menu"
         data-testid={`input-menu-search-${id}`}
       />
     </label>
@@ -197,11 +194,10 @@ function Header({
                 onClick={() => setProfileMenuOpen((open) => !open)}
                 data-testid="button-header-profile"
               >
-                <UserRound size={16} /> <span>+92 {userPhone}</span>
+                <UserRound size={16} /> <span className="cx-profile-label">{profileLabel}</span>
               </button>
               {profileMenuOpen && (
                 <div className="cx-profile-menu">
-                  <button type="button" onClick={() => { setProfileMenuOpen(false); setLocation('/account'); }} data-testid="link-header-account">My Account</button>
                   <button type="button" onClick={() => { setProfileMenuOpen(false); onLogout(); }} data-testid="button-logout">Log out</button>
                 </div>
               )}
@@ -465,6 +461,47 @@ function MenuTabs({ activeCategory, onSelect }: { activeCategory: string; onSele
   );
 }
 
+function ProductCard({
+  item,
+  liked,
+  onLike,
+  onAdd,
+}: {
+  item: MenuItem;
+  liked: boolean;
+  onLike: () => void;
+  onAdd: () => void;
+}) {
+  return (
+    <article className="cx-product-card" data-testid={`card-product-${item.id}`}>
+      <div className="cx-product-image">
+        <img src={item.image} alt={item.name} loading="lazy" />
+        <button
+          type="button"
+          className={`cx-favorite${liked ? ' is-liked' : ''}`}
+          aria-label={liked ? `Remove ${item.name} from favorites` : `Add ${item.name} to favorites`}
+          aria-pressed={liked}
+          onClick={onLike}
+          data-testid={`button-favorite-${item.id}`}
+        >
+          <Heart size={19} fill={liked ? 'currentColor' : 'none'} />
+        </button>
+      </div>
+      <div className="cx-product-info">
+        <h3>{item.name}</h3>
+        <p className="cx-product-description">{item.description || 'A tasty extra to add to your order.'}</p>
+        <div className="cx-product-price">
+          <strong>{formatPrice(item.price)}</strong>
+          {item.startingPrice && <span>Starting Price</span>}
+        </div>
+        <button className="cx-add-button" type="button" onClick={onAdd} data-testid={`button-add-${item.id}`}>
+          <Plus size={15} /> ADD TO CART
+        </button>
+      </div>
+    </article>
+  );
+}
+
 function CartPanel({
   lines,
   total,
@@ -559,7 +596,7 @@ function MenuPage({
   onCheckout: () => void;
 }) {
   const [activeCategory, setActiveCategory] = useState(menuCategories[0].id);
-  const { favorites, toggleFavorite } = useAuth();
+  const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const query = searchQuery.trim().toLowerCase();
   const matchingItems = useMemo(
     () => menuItems.filter((item) => !query || `${item.name} ${item.description} ${item.categoryId}`.toLowerCase().includes(query)),
@@ -630,8 +667,8 @@ function MenuPage({
                       <ProductCard
                         item={item}
                         key={item.id}
-                        liked={favorites.includes(item.id)}
-                        onLike={() => toggleFavorite(item.id)}
+                        liked={Boolean(favorites[item.id])}
+                        onLike={() => setFavorites((current) => ({ ...current, [item.id]: !current[item.id] }))}
                         onAdd={() => onAdd(item)}
                       />
                     ))}
@@ -799,21 +836,10 @@ function NotFoundPage() {
 
 function AppShell() {
   const [location, setLocation] = useLocation();
-  const {
-    userPhone,
-    profile,
-    selectedAddress,
-    savedAddresses,
-    logOut,
-    mode,
-    setMode,
-    favorites,
-    toggleFavorite,
-    orders,
-    addOrder,
-  } = useAuth();
+  const { userPhone, profile, selectedAddress, logOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<Record<string, number>>(readCartFromStorage);
+  const [mode, setMode] = useState<'delivery' | 'pickup'>('delivery');
   const [cartOpen, setCartOpen] = useState(false);
   const [loadingItem, setLoadingItem] = useState<MenuItem | null>(null);
   const [modalItem, setModalItem] = useState<MenuItem | null>(null);
@@ -824,7 +850,6 @@ function AppShell() {
   const [returnHomeAfterAuth, setReturnHomeAfterAuth] = useState(false);
   const [addressFlowActive, setAddressFlowActive] = useState(false);
   const [pendingItem, setPendingItem] = useState<MenuItem | null>(null);
-  const [pendingCheckout, setPendingCheckout] = useState(false);
   const [authToast, setAuthToast] = useState<{ message: string; tone: AuthToastTone } | null>(null);
   const addTimer = useRef<number | null>(null);
 
@@ -853,18 +878,9 @@ function AppShell() {
 
   useEffect(() => {
     const route = location.split('?')[0];
-    const pageTitles: Record<string, string> = {
-      '/menu': `Menu | ${BRAND_NAME}`,
-      '/login': `Login | ${BRAND_NAME}`,
-      '/basket': `Your Basket | ${BRAND_NAME}`,
-      '/payment': `Order Confirmation | ${BRAND_NAME}`,
-      '/account': `My Account | ${BRAND_NAME}`,
-    };
-    document.title = route.startsWith('/receipt/')
-      ? `Order Receipt | ${BRAND_NAME}`
-      : pageTitles[route] ?? `${BRAND_NAME} | Fresh Food, Made to Share`;
     const isMenu = route === '/menu';
     const isLogin = route === '/login';
+    document.title = isMenu ? `Menu | ${BRAND_NAME}` : isLogin ? `Login | ${BRAND_NAME}` : `${BRAND_NAME} | Fresh Food, Made to Share`;
     const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
     if (description) {
       description.content = isMenu
@@ -895,14 +911,11 @@ function AppShell() {
 
   const completeAuthFlow = () => {
     const nextItem = pendingItem;
-    const shouldContinueCheckout = pendingCheckout;
     setSignInOpen(false);
     setAddressesOpen(false);
     setAddressFlowActive(false);
     setPendingItem(null);
-    setPendingCheckout(false);
-    if (shouldContinueCheckout) setLocation('/basket');
-    else if (returnHomeAfterAuth) setLocation('/');
+    if (returnHomeAfterAuth) setLocation('/');
     setReturnHomeAfterAuth(false);
     if (nextItem) beginAdd(nextItem);
   };
@@ -913,7 +926,6 @@ function AppShell() {
       return;
     }
     setPendingItem(item);
-    setPendingCheckout(false);
     setReturnHomeAfterAuth(false);
     setAddressFlowActive(false);
     setSignInOpen(true);
@@ -923,7 +935,6 @@ function AppShell() {
   const closeSignIn = () => {
     setSignInOpen(false);
     setPendingItem(null);
-    setPendingCheckout(false);
     setAddressFlowActive(false);
     setReturnHomeAfterAuth(false);
   };
@@ -938,7 +949,6 @@ function AppShell() {
     setAddressesOpen(false);
     if (addressFlowActive) {
       setPendingItem(null);
-      setPendingCheckout(false);
       setAddressFlowActive(false);
       setReturnHomeAfterAuth(false);
     }
@@ -955,7 +965,6 @@ function AppShell() {
       setAddressesOpen(true);
     } else {
       setPendingItem(null);
-      setPendingCheckout(false);
       setReturnHomeAfterAuth(false);
       setSignInOpen(true);
     }
@@ -963,7 +972,6 @@ function AppShell() {
 
   const startLoginPageFlow = () => {
     setPendingItem(null);
-    setPendingCheckout(false);
     setReturnHomeAfterAuth(true);
     setSignInOpen(true);
   };
@@ -989,67 +997,10 @@ function AppShell() {
     });
   };
 
-  const beginCheckout = () => {
-    setCartOpen(false);
-    if (userPhone) {
-      setLocation('/basket');
-      return;
-    }
-    setPendingItem(null);
-    setPendingCheckout(true);
-    setReturnHomeAfterAuth(false);
-    setAddressFlowActive(false);
-    setSignInOpen(true);
-    showAuthToast('Please login to continue to checkout', 'error');
-  };
-
-  const createOrder = (payment: {
-    paymentMethod: Order['paymentMethod'];
-    instructions: string;
-    discount: number;
-    tax: number;
-    taxRate: number;
-    voucherCode?: string;
-  }) => {
-    const subtotal = cartTotal;
-    const order: Order = {
-      id: `UC-${Math.floor(100000 + Math.random() * 900000)}`,
-      createdAt: new Date().toISOString(),
-      status: 'Confirmed',
-      items: lines.map(({ item, quantity }) => ({
-        id: item.id,
-        name: item.name,
-        quantity,
-        unitPrice: item.price,
-        image: item.image,
-        variation: 'Regular',
-      })),
-      mode,
-      address: mode === 'delivery' ? (selectedAddress || savedAddresses[0] || 'Delivery address not selected') : 'G-15, Islamabad',
-      paymentMethod: payment.paymentMethod,
-      instructions: payment.instructions,
-      subtotal,
-      discount: payment.discount,
-      tax: payment.tax,
-      taxRate: payment.taxRate,
-      total: subtotal - payment.discount + payment.tax,
-      voucherCode: payment.voucherCode,
-    };
-    addOrder(order);
-    setCart({});
-    setLocation(`/receipt/${order.id}`);
-  };
-
-  const route = location.split('?')[0];
-  const hideGlobalActions = route === '/login'
-    || route === '/basket'
-    || route === '/payment'
-    || route === '/account'
-    || route.startsWith('/receipt/');
-  const recommendations = [
-    ...menuItems.filter((item) => ['addons', 'side-orders', 'soft-drinks'].includes(item.categoryId) && !cart[item.id]),
-    ...menuItems.filter((item) => !['addons', 'side-orders', 'soft-drinks'].includes(item.categoryId) && !cart[item.id]),
-  ].slice(0, 8);
+  const checkoutNotice = () => setNotice({
+    title: 'Checkout is a preview',
+    body: 'Your cart is saved in this browser, but payments and order placement are not connected.',
+  });
 
   return (
     <>
@@ -1060,12 +1011,13 @@ function AppShell() {
           onSearch={handleSearch}
           onOpenCart={() => setCartOpen(true)}
           userPhone={userPhone}
+          profileName={profile.name}
           selectedAddress={selectedAddress}
           mode={mode}
           onModeChange={setMode}
           onAddressClick={openHeaderAddress}
           onLogin={() => setLocation('/login')}
-          onLogout={() => { logOut(); setCart({}); setLocation('/'); }}
+          onLogout={logOut}
         />
       )}
       <Switch>
@@ -1084,47 +1036,13 @@ function AppShell() {
             onOpenCart={() => setCartOpen(true)}
             onRemove={removeItem}
             onIncrease={increaseItem}
-            onCheckout={beginCheckout}
+            onCheckout={checkoutNotice}
           />
-        </Route>
-        <Route path="/basket">
-          <BasketPage
-            lines={lines}
-            subtotal={cartTotal}
-            mode={mode}
-            address={selectedAddress ?? ''}
-            recommendations={recommendations}
-            favorites={favorites}
-            onBack={() => setLocation('/menu')}
-            onRemove={removeItem}
-            onIncrease={increaseItem}
-            onAdd={requestAdd}
-            onToggleFavorite={toggleFavorite}
-            onPayment={() => setLocation('/payment')}
-          />
-        </Route>
-        <Route path="/payment">
-          <PaymentPage
-            lines={lines}
-            subtotal={cartTotal}
-            mode={mode}
-            address={selectedAddress ?? ''}
-            recipientName={profile.name || (userPhone ? `+92 ${userPhone}` : '')}
-            onBack={() => setLocation('/basket')}
-            onEditAddress={() => { setAddressFlowActive(false); setAddressesOpen(true); }}
-            onConfirm={createOrder}
-          />
-        </Route>
-        <Route path="/account">
-          <AccountPage menuItems={menuItems} onAdd={requestAdd} onToggleFavorite={toggleFavorite} />
-        </Route>
-        <Route path="/receipt/:id">
-          {(params) => <ReceiptPage order={orders.find((order) => order.id === params.id)} />}
         </Route>
         <Route component={NotFoundPage} />
       </Switch>
-      {!hideGlobalActions && <Footer onNotice={setNotice} />}
-      {!hideGlobalActions && <OrderNow />}
+      {location.split('?')[0] !== '/login' && <Footer onNotice={setNotice} />}
+      {location.split('?')[0] !== '/login' && <OrderNow />}
       <CartOverlay
         open={cartOpen}
         lines={lines}
@@ -1132,7 +1050,7 @@ function AppShell() {
         onClose={() => setCartOpen(false)}
         onRemove={removeItem}
         onIncrease={increaseItem}
-        onCheckout={beginCheckout}
+        onCheckout={checkoutNotice}
       />
       <AddLoading item={loadingItem} />
       <VariationModal
