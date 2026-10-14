@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { CalendarDays, Camera, Check, ChevronRight, Copy, Heart, MapPin, Plus, Trash2 } from 'lucide-react';
+import { Camera, Check, ChevronRight, Copy, Heart, MapPin, Plus, Trash2 } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/auth/AuthContext';
@@ -136,7 +136,7 @@ export function AccountPage({
                 )} />
                 <div className="cx-account-field"><label htmlFor="account-phone">Phone Number</label><div className="cx-readonly-phone"><span>+92</span><input id="account-phone" value={userPhone || 'Sign in to add a phone number'} readOnly aria-readonly="true" data-testid="input-profile-phone" /></div></div>
                 <FormField control={form.control} name="dob" render={({ field }) => (
-                  <FormItem className="cx-account-field"><label htmlFor="account-dob">Date of Birthday</label><div className="cx-date-field"><FormControl><input {...field} ref={(element) => { field.ref(element); dateInputRef.current = element; }} id="account-dob" type="date" min="1900-01-01" max={maxBirthDate} onClick={openDatePicker} data-testid="input-profile-dob" /></FormControl><button type="button" aria-label="Open calendar" onClick={openDatePicker} data-testid="button-open-calendar"><CalendarDays size={17} aria-hidden="true" /></button></div></FormItem>
+                  <FormItem className="cx-account-field"><label htmlFor="account-dob">Date of Birthday</label><div className="cx-date-field"><FormControl><input {...field} ref={(element) => { field.ref(element); dateInputRef.current = element; }} id="account-dob" type="date" min="1900-01-01" max={maxBirthDate} onClick={openDatePicker} data-testid="input-profile-dob" /></FormControl></div></FormItem>
                 )} />
                 <button className="cx-checkout-primary cx-profile-submit" type="submit" disabled={!changed} data-testid="button-update-profile">UPDATE</button>
               </form>
